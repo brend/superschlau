@@ -5,24 +5,33 @@ import type { PlayerState } from './PlayerState';
 const MOVE_SPEED = 120;
 
 export class Player {
-  private readonly gameObject: Phaser.GameObjects.Rectangle;
+  private readonly gameObject: Phaser.GameObjects.Rectangle & {
+    body: Phaser.Physics.Arcade.Body;
+  };
   private readonly state: PlayerState = {
     facing: 'down',
     isMoving: false,
   };
-  private readonly facingMarker: Phaser.GameObjects.Rectangle;
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
-    this.gameObject = scene.add.rectangle(x, y, 24, 24, 0xffffff);
-    this.facingMarker = scene.add.rectangle(x, y, 6, 6, 0xff0000);
+    const gameObject = scene.add.rectangle(x, y, 24, 24, 0xffffff);
+
+    scene.physics.add.existing(gameObject);
+
+    this.gameObject = gameObject as Phaser.GameObjects.Rectangle & {
+      body: Phaser.Physics.Arcade.Body;
+    };
+
+    this.gameObject.body.setCollideWorldBounds(true);
   }
 
-  update(input: MovementInput, delta: number): void {
+  update(input: MovementInput): void {
     const length = Math.hypot(input.x, input.y);
 
     this.state.isMoving = length > 0;
 
     if (!this.state.isMoving) {
+      this.gameObject.body.setVelocity(0);
       return;
     }
 
@@ -31,12 +40,7 @@ export class Player {
     const x = input.x / length;
     const y = input.y / length;
 
-    const distance = MOVE_SPEED * (delta / 1000);
-
-    this.gameObject.x += x * distance;
-    this.gameObject.y += y * distance;
-
-    this.updateFacingMarker();
+    this.gameObject.body.setVelocity(x * MOVE_SPEED, y * MOVE_SPEED);
   }
 
   private updateFacing(input: MovementInput): void {
@@ -47,27 +51,7 @@ export class Player {
     }
   }
 
-  private updateFacingMarker(): void {
-    const offset = 8;
-
-    this.facingMarker.setPosition(this.gameObject.x, this.gameObject.y);
-
-    switch (this.state.facing) {
-      case 'up':
-        this.facingMarker.y -= offset;
-        break;
-
-      case 'down':
-        this.facingMarker.y += offset;
-        break;
-
-      case 'left':
-        this.facingMarker.x -= offset;
-        break;
-
-      case 'right':
-        this.facingMarker.x += offset;
-        break;
-    }
+  get physicsObject(): Phaser.GameObjects.Rectangle {
+    return this.gameObject;
   }
 }

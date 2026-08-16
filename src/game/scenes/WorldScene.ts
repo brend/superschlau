@@ -33,17 +33,25 @@ export class WorldScene extends Phaser.Scene {
       throw new Error('Ground layer could not be created.');
     }
 
+    this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
+
     ground.setCollisionByProperty({
       collides: true,
     });
 
     this.player = new Player(this, 320, 240);
+    this.physics.add.collider(this.player.physicsObject, ground);
+
+    this.cameras.main.startFollow(this.player.physicsObject);
+
     this.inputController = new InputController(this);
+
+    this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
   }
 
-  update(_time: number, delta: number): void {
+  update(): void {
     const movement = this.inputController.getMovement();
 
-    this.player.update(movement, delta);
+    this.player.update(movement);
   }
 }
