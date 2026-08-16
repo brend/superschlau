@@ -1,4 +1,4 @@
 export interface MovementInput {
-    x: number,
-    y: number
+  x: number;
+  y: number;
 }
