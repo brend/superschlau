@@ -1,21 +1,24 @@
 import Phaser from 'phaser';
+import { KeyboardInput } from './KeyboardInput';
 import type { MovementInput } from './MovementInput';
+import { VirtualJoystick } from './VirtualJoystick';
 
 export class InputController {
-  private readonly cursors: Phaser.Types.Input.Keyboard.CursorKeys;
+  private readonly keyboard: KeyboardInput;
+  private readonly joystick: VirtualJoystick;
 
   constructor(scene: Phaser.Scene) {
-    if (!scene.input.keyboard) {
-      throw new Error('Keyboard input is unavailable.');
-    }
-
-    this.cursors = scene.input.keyboard.createCursorKeys();
+    this.keyboard = new KeyboardInput(scene);
+    this.joystick = new VirtualJoystick(scene, 72, 408);
   }
 
   getMovement(): MovementInput {
-    return {
-      x: Number(this.cursors.right.isDown) - Number(this.cursors.left.isDown),
-      y: Number(this.cursors.down.isDown) - Number(this.cursors.up.isDown),
-    };
+    const keyboard = this.keyboard.getMovement();
+
+    if (keyboard.x !== 0 || keyboard.y !== 0) {
+      return keyboard;
+    }
+
+    return this.joystick.getMovement();
   }
 }

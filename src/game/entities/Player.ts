@@ -37,8 +37,10 @@ export class Player {
 
     this.updateFacing(input);
 
-    const x = input.x / length;
-    const y = input.y / length;
+    const scale = length > 1 ? 1 / length : 1;
+
+    const x = input.x * scale;
+    const y = input.y * scale;
 
     this.gameObject.body.setVelocity(x * MOVE_SPEED, y * MOVE_SPEED);
   }

@@ -47,6 +47,8 @@ export class WorldScene extends Phaser.Scene {
     this.inputController = new InputController(this);
 
     this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
+
+    this.input.addPointer(2);
   }
 
   update(): void {
