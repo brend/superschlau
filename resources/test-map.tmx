@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.10" tiledversion="1.12.2" orientation="orthogonal" renderorder="right-down" width="20" height="15" tilewidth="32" tileheight="32" infinite="0" nextlayerid="2" nextobjectid="1">
+ <editorsettings>
+  <export target="../public/assets/maps/test-map.json" format="json"/>
+ </editorsettings>
+ <tileset firstgid="1" name="test-tiles" tilewidth="32" tileheight="32" tilecount="4" columns="2">
+  <image source="../public/assets/tiles/test-tiles.png" width="64" height="64"/>
+ </tileset>
+ <layer id="1" name="Ground" width="20" height="15">
+  <data encoding="csv">
+3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,
+3,3,3,3,1,1,3,3,1,1,1,1,3,3,3,1,3,3,3,3,
+3,3,3,3,1,1,1,1,1,1,1,1,1,1,1,1,1,3,1,3,
+3,3,1,1,1,1,1,1,4,1,1,1,1,1,1,1,1,1,1,3,
+3,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,3,3,
+3,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,3,3,3,
+3,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,3,3,
+3,3,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,3,
+3,3,1,1,1,4,1,1,2,1,1,1,1,1,1,1,1,1,1,3,
+3,3,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,3,
+3,3,1,1,1,1,1,1,1,1,1,1,1,1,4,1,1,1,3,3,
+3,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1,4,3,3,3,
+3,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,3,3,3,
+3,3,3,3,3,3,1,1,3,3,3,1,1,1,1,1,3,3,3,3,
+3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3
+</data>
+ </layer>
+</map>

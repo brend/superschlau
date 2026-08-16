@@ -1,8 +1,13 @@
 import Phaser from 'phaser';
+import { InputController } from '../input/InputController';
+import { Player } from '../entities/player';
 
-export class BootScene extends Phaser.Scene {
+export class WorldScene extends Phaser.Scene {
+	private player!: Player;
+	private inputController!: InputController;
+
 	constructor() {
-		super('BootScene');
+		super('WorldScene');
 	}
 
 	preload(): void {
@@ -38,5 +43,18 @@ export class BootScene extends Phaser.Scene {
 		if (!ground) {
 			throw new Error('Ground layer could not be created.');
 		}
+
+		ground.setCollisionByProperty({
+			collides: true,
+		});
+
+		this.player = new Player(this, 320, 240);
+		this.inputController = new InputController(this);
+	}
+
+	update(_time: number, delta: number): void {
+		const movement = this.inputController.getMovement();
+
+		this.player.update(movement, delta);
 	}
 }

@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { BootScene } from './scenes/BootScene';
+import { WorldScene } from './scenes/WorldScene';
 
 export function createGame(): Phaser.Game {
 	return new Phaser.Game({
@@ -16,7 +16,14 @@ export function createGame(): Phaser.Game {
 			mode: Phaser.Scale.FIT,
 			autoCenter: Phaser.Scale.CENTER_BOTH,
 		},
+
+		physics: {
+			default: 'arcade',
+			arcade: {
+				debug: false,
+			},
+		},
 		
-		scene: [BootScene],
+		scene: [WorldScene],
 	});
 }
