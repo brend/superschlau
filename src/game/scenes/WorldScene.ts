@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { InputController } from '../input/InputController';
-import { Player } from '../entities/player';
+import { Player } from '../entities/Player';
 
 export class WorldScene extends Phaser.Scene {
 	private player!: Player;
