@@ -5,7 +5,7 @@ import type { PlayerState } from './PlayerState';
 const MOVE_SPEED = 120;
 
 export class Player {
-  private readonly gameObject: Phaser.GameObjects.Rectangle & {
+  private readonly gameObject: Phaser.GameObjects.Sprite & {
     body: Phaser.Physics.Arcade.Body;
   };
   private readonly state: PlayerState = {
@@ -14,15 +14,21 @@ export class Player {
   };
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
-    const gameObject = scene.add.rectangle(x, y, 24, 24, 0xffffff);
+    const gameObject = scene.add.sprite(x, y, 'player', 0);
 
     scene.physics.add.existing(gameObject);
 
-    this.gameObject = gameObject as Phaser.GameObjects.Rectangle & {
+    this.gameObject = gameObject as Phaser.GameObjects.Sprite & {
       body: Phaser.Physics.Arcade.Body;
     };
 
+    this.gameObject.body.setSize(20, 16);
+
+    this.gameObject.body.setOffset(6, 14);
+
     this.gameObject.body.setCollideWorldBounds(true);
+
+    this.createAnimations();
   }
 
   update(input: MovementInput): void {
@@ -32,10 +38,12 @@ export class Player {
 
     if (!this.state.isMoving) {
       this.gameObject.body.setVelocity(0);
+      this.setIdleFrame();
       return;
     }
 
     this.updateFacing(input);
+    this.playWalkingAnimation();
 
     const scale = length > 1 ? 1 / length : 1;
 
@@ -53,7 +61,7 @@ export class Player {
     }
   }
 
-  get physicsObject(): Phaser.GameObjects.Rectangle {
+  get physicsObject(): Phaser.GameObjects.Sprite {
     return this.gameObject;
   }
 
@@ -78,5 +86,68 @@ export class Player {
     }
 
     return point;
+  }
+
+  private createAnimations(): void {
+    const animations = this.gameObject.anims.animationManager;
+
+    animations.create({
+      key: 'player-walk-down',
+      frames: animations.generateFrameNumbers('player', {
+        frames: [0, 1, 2, 1],
+      }),
+      frameRate: 8,
+      repeat: -1,
+    });
+
+    animations.create({
+      key: 'player-walk-left',
+      frames: animations.generateFrameNumbers('player', {
+        frames: [3, 4, 5, 4],
+      }),
+      frameRate: 8,
+      repeat: -1,
+    });
+
+    animations.create({
+      key: 'player-walk-right',
+      frames: animations.generateFrameNumbers('player', {
+        frames: [6, 7, 8, 7],
+      }),
+      frameRate: 8,
+      repeat: -1,
+    });
+
+    animations.create({
+      key: 'player-walk-up',
+      frames: animations.generateFrameNumbers('player', {
+        frames: [9, 10, 11, 10],
+      }),
+      frameRate: 8,
+      repeat: -1,
+    });
+  }
+
+  private setIdleFrame(): void {
+    this.gameObject.stop();
+
+    switch (this.state.facing) {
+      case 'down':
+        this.gameObject.setFrame(0);
+        break;
+      case 'left':
+        this.gameObject.setFrame(3);
+        break;
+      case 'right':
+        this.gameObject.setFrame(6);
+        break;
+      case 'up':
+        this.gameObject.setFrame(9);
+        break;
+    }
+  }
+
+  private playWalkingAnimation(): void {
+    this.gameObject.play(`player-walk-${this.state.facing}`, true);
   }
 }

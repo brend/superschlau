@@ -1,44 +1,34 @@
-import Phaser from "phaser";
-import type { Interactable } from "../interactions/Interactable";
+import Phaser from 'phaser';
+import type { Interactable } from '../interactions/Interactable';
 
 export class Npc implements Interactable {
-    private readonly gameObject: Phaser.GameObjects.Rectangle & {
-        body: Phaser.Physics.Arcade.Body;
-    }
+  private readonly gameObject: Phaser.GameObjects.Rectangle & {
+    body: Phaser.Physics.Arcade.StaticBody;
+  };
 
-    readonly interactionBounds: Phaser.Geom.Rectangle;
+  readonly interactionBounds: Phaser.Geom.Rectangle;
 
-    constructor(
-        scene: Phaser.Scene,
-        x: number,
-        y: number,
-    ) {
-        const gameObject = scene.add.rectangle(
-            x,
-            y,
-            24,
-            24,
-            0x4da6ff,
-        );
+  private readonly message: string;
 
-        scene.physics.add.existing(gameObject, true);
+  constructor(scene: Phaser.Scene, x: number, y: number, message: string) {
+    this.message = message;
 
-        this.gameObject = gameObject as Phaser.GameObjects.Rectangle & {
-            body: Phaser.Physics.Arcade.Body;
-        };
+    const gameObject = scene.add.rectangle(x, y, 24, 24, 0x4da6ff);
 
-        this.interactionBounds = new Phaser.Geom.Rectangle(
-            x - 20,
-            y - 20,
-            40, 40,
-        );
-    }
+    scene.physics.add.existing(gameObject, true);
 
-    get physicsObject(): Phaser.GameObjects.Rectangle {
-        return this.gameObject;
-    }
+    this.gameObject = gameObject as Phaser.GameObjects.Rectangle & {
+      body: Phaser.Physics.Arcade.StaticBody;
+    };
 
-    interact(): string {
-        return 'Hello! Nice weather today.';
-    }
+    this.interactionBounds = new Phaser.Geom.Rectangle(x - 20, y - 20, 40, 40);
+  }
+
+  get physicsObject(): Phaser.GameObjects.Rectangle {
+    return this.gameObject;
+  }
+
+  interact(): string {
+    return this.message;
+  }
 }

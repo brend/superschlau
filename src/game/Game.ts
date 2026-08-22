@@ -20,7 +20,7 @@ export function createGame(): Phaser.Game {
     physics: {
       default: 'arcade',
       arcade: {
-        debug: false,
+        debug: true,
       },
     },
 

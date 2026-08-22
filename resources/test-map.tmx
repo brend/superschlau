@@ -1,10 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.12.2" orientation="orthogonal" renderorder="right-down" width="20" height="15" tilewidth="32" tileheight="32" infinite="0" nextlayerid="2" nextobjectid="1">
+<map version="1.10" tiledversion="1.12.2" orientation="orthogonal" renderorder="right-down" width="20" height="15" tilewidth="32" tileheight="32" infinite="0" nextlayerid="3" nextobjectid="4">
  <editorsettings>
   <export target="../public/assets/maps/test-map.json" format="json"/>
  </editorsettings>
  <tileset firstgid="1" name="test-tiles" tilewidth="32" tileheight="32" tilecount="4" columns="2">
   <image source="../public/assets/tiles/test-tiles.png" width="64" height="64"/>
+  <tile id="2">
+   <properties>
+    <property name="collides" type="bool" value="true"/>
+   </properties>
+  </tile>
+  <tile id="3">
+   <properties>
+    <property name="collides" type="bool" value="true"/>
+   </properties>
+  </tile>
  </tileset>
  <layer id="1" name="Ground" width="20" height="15">
   <data encoding="csv">
@@ -25,4 +35,19 @@
 3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3
 </data>
  </layer>
+ <objectgroup id="2" name="Objects">
+  <object id="1" name="player-spawn" x="99.2658" y="203.826">
+   <point/>
+  </object>
+  <object id="2" name="sign-1" type="sign" x="197.208" y="176.031" width="33.0886" height="29.118">
+   <properties>
+    <property name="message" value="The sign reads: Welcome, traveler."/>
+   </properties>
+  </object>
+  <object id="3" name="npc-1" type="npc" x="318.974" y="307.062" width="45.0005" height="35.7357">
+   <properties>
+    <property name="message" value="Hello! Nice weather today."/>
+   </properties>
+  </object>
+ </objectgroup>
 </map>
