@@ -1,10 +1,16 @@
 import Phaser from 'phaser';
 import { InputController } from '../input/InputController';
 import { Player } from '../entities/Player';
+import type { Interactable } from '../interactions/Interactable';
+import { Npc } from '../entities/Npc';
 
 export class WorldScene extends Phaser.Scene {
   private player!: Player;
   private inputController!: InputController;
+  private interactable!: Interactable;
+  private interactionMarker!: Phaser.GameObjects.Arc;
+  private npc!: Npc;
+  private dialogueText!: Phaser.GameObjects.Text;
 
   constructor() {
     super('WorldScene');
@@ -49,11 +55,49 @@ export class WorldScene extends Phaser.Scene {
     this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
 
     this.input.addPointer(2);
+
+    this.npc = new Npc(this, 450, 300);
+
+    this.interactionMarker = this.add.circle(0, 0, 3, 0x0000ff);
+
+    this.dialogueText = this.add
+  .text(
+    320,
+    420,
+    '',
+    {
+      fontFamily: 'sans-serif',
+      fontSize: '18px',
+      color: '#ffffff',
+      backgroundColor: '#000000',
+      padding: {
+        x: 12,
+        y: 8,
+      },
+    },
+  )
+  .setOrigin(0.5)
+  .setScrollFactor(0)
+  .setDepth(100)
+  .setVisible(false);
   }
 
   update(): void {
     const movement = this.inputController.getMovement();
 
     this.player.update(movement);
+
+    if (this.inputController.consumeInteractPress()) {
+      const point = this.player.getInteractionPoint();
+
+      if (this.npc.interactionBounds.contains(
+        point.x,
+        point.y,
+      )) {
+        this.npc.interact();
+      }
+
+      this.interactionMarker.setPosition(point.x, point.y);
+    }
   }
 }

@@ -9,7 +9,6 @@ export class VirtualJoystick {
   private readonly base: Phaser.GameObjects.Arc;
   private readonly knob: Phaser.GameObjects.Arc;
 
-  private readonly scene: Phaser.Scene;
   private readonly x: number;
   private readonly y: number;
 
@@ -21,7 +20,6 @@ export class VirtualJoystick {
   };
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
-    this.scene = scene;
     this.x = x;
     this.y = y;
     this.base = scene.add
@@ -52,14 +50,6 @@ export class VirtualJoystick {
     }
 
     this.activePointerId = pointer.id;
-    this.updateFromPointer(pointer);
-  }
-
-  private handlePointerMove(pointer: Phaser.Input.Pointer): void {
-    if (pointer.id !== this.activePointerId) {
-      return;
-    }
-
     this.updateFromPointer(pointer);
   }
 

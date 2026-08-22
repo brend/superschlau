@@ -56,4 +56,27 @@ export class Player {
   get physicsObject(): Phaser.GameObjects.Rectangle {
     return this.gameObject;
   }
+
+  getInteractionPoint(): Phaser.Math.Vector2 {
+    const distance = 28;
+
+    const point = new Phaser.Math.Vector2(this.gameObject.x, this.gameObject.y);
+
+    switch (this.state.facing) {
+      case 'up':
+        point.y -= distance;
+        break;
+      case 'down':
+        point.y += distance;
+        break;
+      case 'left':
+        point.x -= distance;
+        break;
+      case 'right':
+        point.x += distance;
+        break;
+    }
+
+    return point;
+  }
 }
