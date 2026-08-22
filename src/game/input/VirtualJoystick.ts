@@ -6,6 +6,7 @@ const KNOB_RADIUS = 20;
 const DEAD_ZONE = 0.15;
 
 export class VirtualJoystick {
+  private readonly scene: Phaser.Scene;
   private readonly base: Phaser.GameObjects.Arc;
   private readonly knob: Phaser.GameObjects.Arc;
 
@@ -20,6 +21,7 @@ export class VirtualJoystick {
   };
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
+    this.scene = scene;
     this.x = x;
     this.y = y;
     this.base = scene.add
@@ -32,6 +34,17 @@ export class VirtualJoystick {
     scene.input.on('pointerdown', this.handlePointerDown, this);
     scene.input.on('pointermove', this.handlePointerMove, this);
     scene.input.on('pointerup', this.handlePointerUp, this);
+  }
+
+  destroy(): void {
+    this.scene.input.off('pointerdown', this.handlePointerDown, this);
+
+    this.scene.input.off('pointermove', this.handlePointerMove, this);
+
+    this.scene.input.off('pointerup', this.handlePointerUp, this);
+
+    this.base.destroy();
+    this.knob.destroy();
   }
 
   getMovement(): MovementInput {

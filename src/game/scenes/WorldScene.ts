@@ -46,6 +46,8 @@ export class WorldScene extends Phaser.Scene {
     this.interactables.length = 0;
     this.transitions.length = 0;
 
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.handleShutdown, this);
+
     const map = this.make.tilemap({
       key: this.mapKey,
     });
@@ -59,7 +61,9 @@ export class WorldScene extends Phaser.Scene {
     const playerSpawn = objects.objects.find((object) => object.name === this.spawnName);
 
     if (!playerSpawn || playerSpawn.x === undefined || playerSpawn.y === undefined) {
-      throw new Error(`Player spawn "${this.spawnName}" could not be found in map "${this.mapKey}"`);
+      throw new Error(
+        `Player spawn "${this.spawnName}" could not be found in map "${this.mapKey}"`,
+      );
     }
 
     const tileset = map.addTilesetImage('test-tiles', 'test-tiles');
@@ -193,5 +197,9 @@ export class WorldScene extends Phaser.Scene {
   private closeDialogue(): void {
     this.isDialogueOpen = false;
     this.dialogueText.setVisible(false);
+  }
+
+  private handleShutdown(): void {
+    this.inputController.destroy();
   }
 }

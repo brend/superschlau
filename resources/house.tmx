@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.10" tiledversion="1.12.2" orientation="orthogonal" renderorder="right-down" width="10" height="10" tilewidth="32" tileheight="32" infinite="0" nextlayerid="3" nextobjectid="3">
+ <editorsettings>
+  <export target="../public/assets/maps/house.json" format="json"/>
+ </editorsettings>
+ <tileset firstgid="1" name="test-tiles" tilewidth="32" tileheight="32" tilecount="4" columns="2">
+  <image source="../public/assets/tiles/test-tiles.png" width="64" height="64"/>
+  <tile id="2">
+   <properties>
+    <property name="collides" type="bool" value="true"/>
+   </properties>
+  </tile>
+  <tile id="3">
+   <properties>
+    <property name="collides" type="bool" value="true"/>
+   </properties>
+  </tile>
+ </tileset>
+ <layer id="1" name="Ground" width="10" height="10">
+  <data encoding="csv">
+3,3,3,3,3,3,3,3,3,3,
+3,1,1,1,1,1,1,1,1,3,
+3,1,1,1,1,1,4,4,1,3,
+3,1,1,1,1,1,1,1,1,3,
+3,1,1,1,1,1,1,1,1,3,
+3,1,4,4,1,1,4,4,1,3,
+3,1,1,1,1,1,1,1,1,3,
+3,1,1,1,1,1,1,1,1,3,
+3,1,1,1,2,2,1,1,1,3,
+3,3,3,3,2,2,3,3,3,3
+</data>
+ </layer>
+ <objectgroup id="2" name="Objects">
+  <object id="1" name="spawn-from-outside" x="143.529" y="281.355">
+   <point/>
+  </object>
+  <object id="2" name="door" type="transition" x="129.271" y="289.91" width="61.7841" height="28.5157">
+   <properties>
+    <property name="targetMap" value="test-map"/>
+    <property name="targetSpawn" value="spawn-from-house"/>
+   </properties>
+  </object>
+ </objectgroup>
+</map>

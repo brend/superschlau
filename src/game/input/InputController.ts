@@ -28,4 +28,9 @@ export class InputController {
   consumeInteractPress(): boolean {
     return this.keyboard.consumeInteractPress() || this.interactButton.consumePress();
   }
+
+  destroy(): void {
+    this.joystick.destroy();
+    this.interactButton.destroy();
+  }
 }
