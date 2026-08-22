@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.12.2" orientation="orthogonal" renderorder="right-down" width="20" height="15" tilewidth="32" tileheight="32" infinite="0" nextlayerid="3" nextobjectid="5">
+<map version="1.10" tiledversion="1.12.2" orientation="orthogonal" renderorder="right-down" width="20" height="15" tilewidth="32" tileheight="32" infinite="0" nextlayerid="3" nextobjectid="6">
  <editorsettings>
   <export target="../public/assets/maps/test-map.json" format="json"/>
  </editorsettings>
@@ -52,8 +52,11 @@
   <object id="4" name="entrance" type="transition" x="198.532" y="214.414" width="38.3828" height="21.1767">
    <properties>
     <property name="targetMap" value="house"/>
-    <property name="targetSpawn" value="spawn-default"/>
+    <property name="targetSpawn" value="spawn-from-outside"/>
    </properties>
+  </object>
+  <object id="5" name="spawn-from-house" x="214.414" y="250.15">
+   <point/>
   </object>
  </objectgroup>
 </map>

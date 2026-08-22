@@ -8,10 +8,12 @@ import { getStringProperty } from '../maps/TiledProperties';
 
 interface WorldSceneData {
   mapKey?: string;
+  spawnName?: string;
 }
 
 export class WorldScene extends Phaser.Scene {
   private mapKey = 'test-map';
+  private spawnName = 'spawn-default';
   private player!: Player;
   private inputController!: InputController;
   private readonly interactables: Interactable[] = [];
@@ -25,6 +27,7 @@ export class WorldScene extends Phaser.Scene {
 
   init(data: WorldSceneData): void {
     this.mapKey = data.mapKey ?? 'test-map';
+    this.spawnName = data.spawnName ?? 'spawn-default';
   }
 
   preload(): void {
@@ -53,10 +56,10 @@ export class WorldScene extends Phaser.Scene {
       throw new Error('Objects layer could not be found.');
     }
 
-    const playerSpawn = objects.objects.find((object) => object.name === 'spawn-default');
+    const playerSpawn = objects.objects.find((object) => object.name === this.spawnName);
 
     if (!playerSpawn || playerSpawn.x === undefined || playerSpawn.y === undefined) {
-      throw new Error('Player spawn could not be found.');
+      throw new Error(`Player spawn "${this.spawnName}" could not be found in map "${this.mapKey}"`);
     }
 
     const tileset = map.addTilesetImage('test-tiles', 'test-tiles');
@@ -176,6 +179,7 @@ export class WorldScene extends Phaser.Scene {
     if (transition) {
       this.scene.restart({
         mapKey: transition.targetMap,
+        spawnName: transition.targetSpawn,
       });
     }
   }

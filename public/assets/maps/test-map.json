@@ -1,164 +1,170 @@
-{
-  "compressionlevel": -1,
-  "height": 15,
-  "infinite": false,
-  "layers": [
-    {
-      "data": [
-        3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 1, 1, 3, 3, 1, 1, 1,
-        1, 3, 3, 3, 1, 3, 3, 3, 3, 3, 3, 3, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 1, 3, 3, 3,
-        1, 1, 1, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1,
-        1, 1, 1, 1, 1, 3, 3, 3, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3, 3, 3, 1, 1, 1,
-        1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3, 3, 3, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1,
-        1, 1, 1, 1, 3, 3, 3, 1, 1, 1, 4, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3, 3, 1, 1, 1, 1,
-        1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4, 1, 1,
-        1, 3, 3, 3, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4, 3, 3, 3, 3, 3, 1, 1, 1, 1, 1, 1,
-        1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 1, 1, 3, 3, 3, 1, 1, 1, 1, 1, 3, 3, 3,
-        3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3
-      ],
-      "height": 15,
-      "id": 1,
-      "name": "Ground",
-      "opacity": 1,
-      "type": "tilelayer",
-      "visible": true,
-      "width": 20,
-      "x": 0,
-      "y": 0
-    },
-    {
-      "draworder": "topdown",
-      "id": 2,
-      "name": "Objects",
-      "objects": [
+{ "compressionlevel":-1,
+ "height":15,
+ "infinite":false,
+ "layers":[
         {
-          "height": 0,
-          "id": 1,
-          "name": "spawn-default",
-          "opacity": 1,
-          "point": true,
-          "rotation": 0,
-          "type": "",
-          "visible": true,
-          "width": 0,
-          "x": 99.265846344742,
-          "y": 203.825871161204
-        },
+         "data":[3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+            3, 3, 3, 3, 1, 1, 3, 3, 1, 1, 1, 1, 3, 3, 3, 1, 3, 3, 3, 3,
+            3, 3, 3, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 1, 3,
+            3, 3, 1, 1, 1, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3,
+            3, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3,
+            3, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3, 3,
+            3, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3,
+            3, 3, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3,
+            3, 3, 1, 1, 1, 4, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3,
+            3, 3, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3,
+            3, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4, 1, 1, 1, 3, 3,
+            3, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4, 3, 3, 3,
+            3, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3, 3,
+            3, 3, 3, 3, 3, 3, 1, 1, 3, 3, 3, 1, 1, 1, 1, 1, 3, 3, 3, 3,
+            3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+         "height":15,
+         "id":1,
+         "name":"Ground",
+         "opacity":1,
+         "type":"tilelayer",
+         "visible":true,
+         "width":20,
+         "x":0,
+         "y":0
+        }, 
         {
-          "height": 29.1179815944577,
-          "id": 2,
-          "name": "sign-1",
-          "opacity": 1,
-          "properties": [
-            {
-              "name": "message",
-              "type": "string",
-              "value": "The sign reads: Welcome, traveler."
-            }
-          ],
-          "rotation": 0,
-          "type": "sign",
-          "visible": true,
-          "width": 33.0886154482473,
-          "x": 197.208148071554,
-          "y": 176.031434184676
-        },
+         "draworder":"topdown",
+         "id":2,
+         "name":"Objects",
+         "objects":[
+                {
+                 "height":0,
+                 "id":1,
+                 "name":"spawn-default",
+                 "opacity":1,
+                 "point":true,
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":99.265846344742,
+                 "y":203.825871161204
+                }, 
+                {
+                 "height":29.1179815944577,
+                 "id":2,
+                 "name":"sign-1",
+                 "opacity":1,
+                 "properties":[
+                        {
+                         "name":"message",
+                         "type":"string",
+                         "value":"The sign reads: Welcome, traveler."
+                        }],
+                 "rotation":0,
+                 "type":"sign",
+                 "visible":true,
+                 "width":33.0886154482473,
+                 "x":197.208148071554,
+                 "y":176.031434184676
+                }, 
+                {
+                 "height":35.7357046841071,
+                 "id":3,
+                 "name":"npc-1",
+                 "opacity":1,
+                 "properties":[
+                        {
+                         "name":"message",
+                         "type":"string",
+                         "value":"Hello! Nice weather today."
+                        }],
+                 "rotation":0,
+                 "type":"npc",
+                 "visible":true,
+                 "width":45.0005170096164,
+                 "x":318.974252921104,
+                 "y":307.062351359735
+                }, 
+                {
+                 "height":21.1767138868783,
+                 "id":4,
+                 "name":"entrance",
+                 "opacity":1,
+                 "properties":[
+                        {
+                         "name":"targetMap",
+                         "type":"string",
+                         "value":"house"
+                        }, 
+                        {
+                         "name":"targetSpawn",
+                         "type":"string",
+                         "value":"spawn-from-outside"
+                        }],
+                 "rotation":0,
+                 "type":"transition",
+                 "visible":true,
+                 "width":38.3827939199669,
+                 "x":198.531692689484,
+                 "y":214.414228104643
+                }, 
+                {
+                 "height":0,
+                 "id":5,
+                 "name":"spawn-from-house",
+                 "opacity":1,
+                 "point":true,
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":214.414228104643,
+                 "y":250.14993278875
+                }],
+         "opacity":1,
+         "type":"objectgroup",
+         "visible":true,
+         "x":0,
+         "y":0
+        }],
+ "nextlayerid":3,
+ "nextobjectid":6,
+ "orientation":"orthogonal",
+ "renderorder":"right-down",
+ "tiledversion":"1.12.2",
+ "tileheight":32,
+ "tilesets":[
         {
-          "height": 35.7357046841071,
-          "id": 3,
-          "name": "npc-1",
-          "opacity": 1,
-          "properties": [
-            {
-              "name": "message",
-              "type": "string",
-              "value": "Hello! Nice weather today."
-            }
-          ],
-          "rotation": 0,
-          "type": "npc",
-          "visible": true,
-          "width": 45.0005170096164,
-          "x": 318.974252921104,
-          "y": 307.062351359735
-        },
-        {
-          "height": 21.1767138868783,
-          "id": 4,
-          "name": "entrance",
-          "opacity": 1,
-          "properties": [
-            {
-              "name": "targetMap",
-              "type": "string",
-              "value": "house"
-            },
-            {
-              "name": "targetSpawn",
-              "type": "string",
-              "value": "spawn-default"
-            }
-          ],
-          "rotation": 0,
-          "type": "transition",
-          "visible": true,
-          "width": 38.3827939199669,
-          "x": 198.531692689484,
-          "y": 214.414228104643
-        }
-      ],
-      "opacity": 1,
-      "type": "objectgroup",
-      "visible": true,
-      "x": 0,
-      "y": 0
-    }
-  ],
-  "nextlayerid": 3,
-  "nextobjectid": 5,
-  "orientation": "orthogonal",
-  "renderorder": "right-down",
-  "tiledversion": "1.12.2",
-  "tileheight": 32,
-  "tilesets": [
-    {
-      "columns": 2,
-      "firstgid": 1,
-      "image": "..\/tiles\/test-tiles.png",
-      "imageheight": 64,
-      "imagewidth": 64,
-      "margin": 0,
-      "name": "test-tiles",
-      "spacing": 0,
-      "tilecount": 4,
-      "tileheight": 32,
-      "tiles": [
-        {
-          "id": 2,
-          "properties": [
-            {
-              "name": "collides",
-              "type": "bool",
-              "value": true
-            }
-          ]
-        },
-        {
-          "id": 3,
-          "properties": [
-            {
-              "name": "collides",
-              "type": "bool",
-              "value": true
-            }
-          ]
-        }
-      ],
-      "tilewidth": 32
-    }
-  ],
-  "tilewidth": 32,
-  "type": "map",
-  "version": "1.10",
-  "width": 20
+         "columns":2,
+         "firstgid":1,
+         "image":"..\/tiles\/test-tiles.png",
+         "imageheight":64,
+         "imagewidth":64,
+         "margin":0,
+         "name":"test-tiles",
+         "spacing":0,
+         "tilecount":4,
+         "tileheight":32,
+         "tiles":[
+                {
+                 "id":2,
+                 "properties":[
+                        {
+                         "name":"collides",
+                         "type":"bool",
+                         "value":true
+                        }]
+                }, 
+                {
+                 "id":3,
+                 "properties":[
+                        {
+                         "name":"collides",
+                         "type":"bool",
+                         "value":true
+                        }]
+                }],
+         "tilewidth":32
+        }],
+ "tilewidth":32,
+ "type":"map",
+ "version":"1.10",
+ "width":20
 }
