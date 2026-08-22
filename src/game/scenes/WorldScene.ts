@@ -5,6 +5,7 @@ import type { Interactable } from '../interactions/Interactable';
 import { createMapEntity } from '../maps/MapEntityFactory';
 import type { MapTransition } from '../maps/MapTransition';
 import { getStringProperty } from '../maps/TiledProperties';
+import { UIScene } from './UIScene';
 
 interface WorldSceneData {
   mapKey?: string;
@@ -45,8 +46,6 @@ export class WorldScene extends Phaser.Scene {
   create(): void {
     this.interactables.length = 0;
     this.transitions.length = 0;
-
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.handleShutdown, this);
 
     const map = this.make.tilemap({
       key: this.mapKey,
@@ -127,8 +126,6 @@ export class WorldScene extends Phaser.Scene {
 
     this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
 
-    this.input.addPointer(2);
-
     this.dialogueText = this.add
       .text(320, 420, '', {
         fontFamily: 'sans-serif',
@@ -144,26 +141,35 @@ export class WorldScene extends Phaser.Scene {
       .setScrollFactor(0)
       .setDepth(100)
       .setVisible(false);
+
+    if (!this.scene.isActive('UIScene')) {
+      this.scene.launch('UIScene');
+    }
   }
 
   update(): void {
     if (this.isDialogueOpen) {
       this.player.update({ x: 0, y: 0 });
 
-      if (this.inputController.consumeInteractPress()) {
+      if (this.inputController.consumeInteractPress() || this.uiScene.consumeInteractPress()) {
         this.closeDialogue();
       }
 
       return;
     }
 
-    const movement = this.inputController.getMovement();
+    const keyboardMovement = this.inputController.getMovement();
+
+    const touchMovement = this.uiScene.getMovement();
+
+    const movement =
+      keyboardMovement.x !== 0 || keyboardMovement.y !== 0 ? keyboardMovement : touchMovement;
 
     this.player.update(movement);
 
     const point = this.player.getInteractionPoint();
 
-    if (this.inputController.consumeInteractPress()) {
+    if (this.inputController.consumeInteractPress() || this.uiScene.consumeInteractPress()) {
       const interactable = this.interactables.find((candidate) =>
         candidate.interactionBounds.contains(point.x, point.y),
       );
@@ -199,7 +205,7 @@ export class WorldScene extends Phaser.Scene {
     this.dialogueText.setVisible(false);
   }
 
-  private handleShutdown(): void {
-    this.inputController.destroy();
+  private get uiScene(): UIScene {
+    return this.scene.get('UIScene') as UIScene;
   }
 }

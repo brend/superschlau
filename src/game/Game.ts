@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { WorldScene } from './scenes/WorldScene';
+import { UIScene } from './scenes/UIScene';
 
 export function createGame(): Phaser.Game {
   return new Phaser.Game({
@@ -24,6 +25,6 @@ export function createGame(): Phaser.Game {
       },
     },
 
-    scene: [WorldScene],
+    scene: [WorldScene, UIScene],
   });
 }
