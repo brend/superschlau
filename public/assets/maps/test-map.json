@@ -34,7 +34,7 @@
         {
           "height": 0,
           "id": 1,
-          "name": "player-spawn",
+          "name": "spawn-default",
           "opacity": 1,
           "point": true,
           "rotation": 0,
@@ -81,6 +81,30 @@
           "width": 45.0005170096164,
           "x": 318.974252921104,
           "y": 307.062351359735
+        },
+        {
+          "height": 21.1767138868783,
+          "id": 4,
+          "name": "entrance",
+          "opacity": 1,
+          "properties": [
+            {
+              "name": "targetMap",
+              "type": "string",
+              "value": "house"
+            },
+            {
+              "name": "targetSpawn",
+              "type": "string",
+              "value": "spawn-default"
+            }
+          ],
+          "rotation": 0,
+          "type": "transition",
+          "visible": true,
+          "width": 38.3827939199669,
+          "x": 198.531692689484,
+          "y": 214.414228104643
         }
       ],
       "opacity": 1,
@@ -91,7 +115,7 @@
     }
   ],
   "nextlayerid": 3,
-  "nextobjectid": 4,
+  "nextobjectid": 5,
   "orientation": "orthogonal",
   "renderorder": "right-down",
   "tiledversion": "1.12.2",

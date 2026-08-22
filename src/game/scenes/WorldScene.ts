@@ -1,16 +1,21 @@
 import Phaser from 'phaser';
 import { InputController } from '../input/InputController';
 import { Player } from '../entities/Player';
-import { Npc } from '../entities/Npc';
 import type { Interactable } from '../interactions/Interactable';
-import { Sign } from '../entities/Sign';
-import { getStringProperty } from '../maps/TiledProperties';
 import { createMapEntity } from '../maps/MapEntityFactory';
+import type { MapTransition } from '../maps/MapTransition';
+import { getStringProperty } from '../maps/TiledProperties';
+
+interface WorldSceneData {
+  mapKey?: string;
+}
 
 export class WorldScene extends Phaser.Scene {
+  private mapKey = 'test-map';
   private player!: Player;
   private inputController!: InputController;
   private readonly interactables: Interactable[] = [];
+  private readonly transitions: MapTransition[] = [];
   private dialogueText!: Phaser.GameObjects.Text;
   private isDialogueOpen = false;
 
@@ -18,10 +23,15 @@ export class WorldScene extends Phaser.Scene {
     super('WorldScene');
   }
 
+  init(data: WorldSceneData): void {
+    this.mapKey = data.mapKey ?? 'test-map';
+  }
+
   preload(): void {
     this.load.image('test-tiles', '/assets/tiles/test-tiles.png');
 
     this.load.tilemapTiledJSON('test-map', '/assets/maps/test-map.json');
+    this.load.tilemapTiledJSON('house', '/assets/maps/house.json');
 
     this.load.spritesheet('player', '/assets/characters/player.png', {
       frameWidth: 32,
@@ -30,8 +40,11 @@ export class WorldScene extends Phaser.Scene {
   }
 
   create(): void {
+    this.interactables.length = 0;
+    this.transitions.length = 0;
+
     const map = this.make.tilemap({
-      key: 'test-map',
+      key: this.mapKey,
     });
 
     const objects = map.getObjectLayer('Objects');
@@ -40,7 +53,7 @@ export class WorldScene extends Phaser.Scene {
       throw new Error('Objects layer could not be found.');
     }
 
-    const playerSpawn = objects.objects.find((object) => object.name === 'player-spawn');
+    const playerSpawn = objects.objects.find((object) => object.name === 'spawn-default');
 
     if (!playerSpawn || playerSpawn.x === undefined || playerSpawn.y === undefined) {
       throw new Error('Player spawn could not be found.');
@@ -82,6 +95,25 @@ export class WorldScene extends Phaser.Scene {
       if (entity.physicsObject) {
         this.physics.add.collider(this.player.physicsObject, entity.physicsObject);
       }
+    }
+
+    const transitionObjects = objects.objects.filter((object) => object.type === 'transition');
+
+    for (const object of transitionObjects) {
+      if (
+        object.x === undefined ||
+        object.y === undefined ||
+        object.width === undefined ||
+        object.height === undefined
+      ) {
+        throw new Error(`Transition "${object.name}" has invalid bounds.`);
+      }
+
+      this.transitions.push({
+        bounds: new Phaser.Geom.Rectangle(object.x, object.y, object.width, object.height),
+        targetMap: getStringProperty(object, 'targetMap'),
+        targetSpawn: getStringProperty(object, 'targetSpawn'),
+      });
     }
 
     this.inputController = new InputController(this);
@@ -134,6 +166,17 @@ export class WorldScene extends Phaser.Scene {
 
         this.openDialogue(message);
       }
+    }
+
+    const x = this.player.physicsObject.x;
+    const y = this.player.physicsObject.y;
+
+    const transition = this.transitions.find((candidate) => candidate.bounds.contains(x, y));
+
+    if (transition) {
+      this.scene.restart({
+        mapKey: transition.targetMap,
+      });
     }
   }
 

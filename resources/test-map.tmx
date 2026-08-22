@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.12.2" orientation="orthogonal" renderorder="right-down" width="20" height="15" tilewidth="32" tileheight="32" infinite="0" nextlayerid="3" nextobjectid="4">
+<map version="1.10" tiledversion="1.12.2" orientation="orthogonal" renderorder="right-down" width="20" height="15" tilewidth="32" tileheight="32" infinite="0" nextlayerid="3" nextobjectid="5">
  <editorsettings>
   <export target="../public/assets/maps/test-map.json" format="json"/>
  </editorsettings>
@@ -36,7 +36,7 @@
 </data>
  </layer>
  <objectgroup id="2" name="Objects">
-  <object id="1" name="player-spawn" x="99.2658" y="203.826">
+  <object id="1" name="spawn-default" x="99.2658" y="203.826">
    <point/>
   </object>
   <object id="2" name="sign-1" type="sign" x="197.208" y="176.031" width="33.0886" height="29.118">
@@ -47,6 +47,12 @@
   <object id="3" name="npc-1" type="npc" x="318.974" y="307.062" width="45.0005" height="35.7357">
    <properties>
     <property name="message" value="Hello! Nice weather today."/>
+   </properties>
+  </object>
+  <object id="4" name="entrance" type="transition" x="198.532" y="214.414" width="38.3828" height="21.1767">
+   <properties>
+    <property name="targetMap" value="house"/>
+    <property name="targetSpawn" value="spawn-default"/>
    </properties>
   </object>
  </objectgroup>
