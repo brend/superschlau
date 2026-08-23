@@ -14,6 +14,8 @@ export class UIScene extends Phaser.Scene implements InputSource {
   }
 
   create(): void {
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.handleShutdown, this);
+
     this.input.addPointer(2);
 
     this.joystick = new VirtualJoystick(this, 72, 408);
@@ -34,6 +36,10 @@ export class UIScene extends Phaser.Scene implements InputSource {
       .setOrigin(0.5)
       .setDepth(100)
       .setVisible(false);
+
+    document.addEventListener('visibilitychange', this.handleVisibilityChange);
+    window.addEventListener('blur', this.handleBlur);
+    window.addEventListener('pagehide', this.handlePageHide);
   }
 
   getMovement(): MovementInput {
@@ -50,5 +56,33 @@ export class UIScene extends Phaser.Scene implements InputSource {
 
   hideDialogue(): void {
     this.dialogueText.setVisible(false);
+  }
+
+  resetInput(): void {
+    this.joystick.reset();
+    this.interactButton.reset();
+  }
+
+  private handleVisibilityChange = (): void => {
+    if (document.hidden) {
+      this.resetInput();
+    }
+  };
+
+  private handleBlur = (): void => {
+    this.resetInput();
+  };
+
+  private handlePageHide = (): void => {
+    this.resetInput();
+  };
+
+  private handleShutdown(): void {
+    document.removeEventListener('visibilitychange', this.handleVisibilityChange);
+
+    window.removeEventListener('blur', this.handleBlur);
+
+    this.joystick.destroy();
+    this.interactButton.destroy();
   }
 }

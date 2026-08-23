@@ -37,10 +37,10 @@ export class VirtualJoystick {
   }
 
   destroy(): void {
+    this.reset();
+
     this.scene.input.off('pointerdown', this.handlePointerDown, this);
-
     this.scene.input.off('pointermove', this.handlePointerMove, this);
-
     this.scene.input.off('pointerup', this.handlePointerUp, this);
 
     this.base.destroy();
@@ -79,14 +79,7 @@ export class VirtualJoystick {
       return;
     }
 
-    this.activePointerId = null;
-
-    this.movement = {
-      x: 0,
-      y: 0,
-    };
-
-    this.knob.setPosition(this.x, this.y);
+    this.reset();
   }
 
   private updateFromPointer(pointer: Phaser.Input.Pointer): void {
@@ -122,5 +115,13 @@ export class VirtualJoystick {
       x: directionX * magnitude,
       y: directionY * magnitude,
     };
+  }
+
+  reset(): void {
+    this.activePointerId = null;
+
+    this.movement = { x: 0, y: 0 };
+
+    this.knob.setPosition(this.x, this.y);
   }
 }

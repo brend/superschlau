@@ -48,10 +48,11 @@ export class VirtualButton {
   }
 
   private handlePointerUp(pointer: Phaser.Input.Pointer): void {
-    if (pointer.id !== this.activePointerId) return;
+    if (pointer.id !== this.activePointerId) {
+      return;
+    }
 
-    this.activePointerId = null;
-    this.circle.setAlpha(1);
+    this.reset();
   }
 
   consumePress(): boolean {
@@ -64,11 +65,18 @@ export class VirtualButton {
   }
 
   destroy(): void {
-    this.scene.input.off('pointerdown', this.handlePointerDown, this);
+    this.reset();
 
+    this.scene.input.off('pointerdown', this.handlePointerDown, this);
     this.scene.input.off('pointerup', this.handlePointerUp, this);
 
     this.circle.destroy();
     this.label.destroy();
+  }
+
+  reset(): void {
+    this.activePointerId = null;
+    this.justPressed = false;
+    this.circle.setAlpha(1);
   }
 }
