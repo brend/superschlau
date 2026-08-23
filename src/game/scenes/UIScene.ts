@@ -40,6 +40,8 @@ export class UIScene extends Phaser.Scene implements InputSource {
     document.addEventListener('visibilitychange', this.handleVisibilityChange);
     window.addEventListener('blur', this.handleBlur);
     window.addEventListener('pagehide', this.handlePageHide);
+
+    this.scale.on(Phaser.Scale.Events.RESIZE, this.handleResize, this);
   }
 
   getMovement(): MovementInput {
@@ -79,10 +81,14 @@ export class UIScene extends Phaser.Scene implements InputSource {
 
   private handleShutdown(): void {
     document.removeEventListener('visibilitychange', this.handleVisibilityChange);
-
     window.removeEventListener('blur', this.handleBlur);
+    this.scale.off(Phaser.Scale.Events.RESIZE, this.handleResize, this);
 
     this.joystick.destroy();
     this.interactButton.destroy();
+  }
+
+  private handleResize(): void {
+    this.resetInput();
   }
 }
