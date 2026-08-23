@@ -19,7 +19,6 @@ export class WorldScene extends Phaser.Scene {
   private inputController?: InputController;
   private readonly interactables: Interactable[] = [];
   private readonly transitions: MapTransition[] = [];
-  private dialogueText!: Phaser.GameObjects.Text;
   private isDialogueOpen = false;
 
   constructor() {
@@ -47,6 +46,10 @@ export class WorldScene extends Phaser.Scene {
     this.interactables.length = 0;
     this.transitions.length = 0;
     this.inputController = undefined;
+    this.isDialogueOpen = false;
+    if (this.scene.isActive('UIScene')) {
+      this.uiScene.hideDialogue();
+    }
 
     const map = this.make.tilemap({
       key: this.mapKey,
@@ -125,22 +128,6 @@ export class WorldScene extends Phaser.Scene {
 
     this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
 
-    this.dialogueText = this.add
-      .text(320, 420, '', {
-        fontFamily: 'sans-serif',
-        fontSize: '18px',
-        color: '#ffffff',
-        backgroundColor: '#000000',
-        padding: {
-          x: 12,
-          y: 8,
-        },
-      })
-      .setOrigin(0.5)
-      .setScrollFactor(0)
-      .setDepth(100)
-      .setVisible(false);
-
     if (!this.scene.isActive('UIScene')) {
       this.scene.launch('UIScene');
     }
@@ -200,13 +187,12 @@ export class WorldScene extends Phaser.Scene {
 
   private openDialogue(message: string): void {
     this.isDialogueOpen = true;
-
-    this.dialogueText.setText(message).setVisible(true);
+    this.uiScene.showDialogue(message);
   }
 
   private closeDialogue(): void {
     this.isDialogueOpen = false;
-    this.dialogueText.setVisible(false);
+    this.uiScene.hideDialogue();
   }
 
   private get uiScene(): UIScene {
