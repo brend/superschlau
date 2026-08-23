@@ -55,7 +55,12 @@
                         {
                          "name":"message",
                          "type":"string",
-                         "value":"The sign reads: Welcome, traveler."
+                         "value":"The sign is pretty weathered and unreadable."
+                        }, 
+                        {
+                         "name":"setFlag",
+                         "type":"string",
+                         "value":"quest-sign-read"
                         }],
                  "rotation":0,
                  "type":"sign",
@@ -71,9 +76,34 @@
                  "opacity":1,
                  "properties":[
                         {
+                         "name":"completedFlag",
+                         "type":"string",
+                         "value":"quest-sign-read"
+                        }, 
+                        {
+                         "name":"completedMessage",
+                         "type":"string",
+                         "value":"Pretty cool sign, huh?"
+                        }, 
+                        {
                          "name":"message",
                          "type":"string",
-                         "value":"Hello! Nice weather today."
+                         "value":"Could you check the old sign near the path?"
+                        }, 
+                        {
+                         "name":"setFlag",
+                         "type":"string",
+                         "value":"quest-sign-started"
+                        }, 
+                        {
+                         "name":"startedFlag",
+                         "type":"string",
+                         "value":"quest-sign-started"
+                        }, 
+                        {
+                         "name":"startedMessage",
+                         "type":"string",
+                         "value":"The sign is still out there."
                         }],
                  "rotation":0,
                  "type":"npc",

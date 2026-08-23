@@ -1,5 +1,8 @@
 import Phaser from 'phaser';
 import type { Interactable } from '../interactions/Interactable';
+import type { GameState } from '../gameplay/GameState';
+import type { InteractionResult } from '../interactions/InteractionResult';
+import type { NpcDialogue } from './NpcDialogue';
 
 export class Npc implements Interactable {
   private readonly gameObject: Phaser.GameObjects.Rectangle & {
@@ -8,10 +11,10 @@ export class Npc implements Interactable {
 
   readonly interactionBounds: Phaser.Geom.Rectangle;
 
-  private readonly message: string;
+  private readonly dialogue: NpcDialogue;
 
-  constructor(scene: Phaser.Scene, x: number, y: number, message: string) {
-    this.message = message;
+  constructor(scene: Phaser.Scene, x: number, y: number, dialogue: NpcDialogue) {
+    this.dialogue = dialogue;
 
     const gameObject = scene.add.rectangle(x, y, 24, 24, 0x4da6ff);
 
@@ -28,7 +31,22 @@ export class Npc implements Interactable {
     return this.gameObject;
   }
 
-  interact(): string {
-    return this.message;
+  interact(gameState: GameState): InteractionResult {
+    if (this.dialogue.completedFlag && gameState.hasFlag(this.dialogue.completedFlag)) {
+      return {
+        message: this.dialogue.completedMessage ?? this.dialogue.defaultMessage,
+      };
+    }
+
+    if (this.dialogue.startedFlag && gameState.hasFlag(this.dialogue.startedFlag)) {
+      return {
+        message: this.dialogue.startedMessage ?? this.dialogue.defaultMessage,
+      };
+    }
+
+    return {
+      message: this.dialogue.defaultMessage,
+      setFlag: this.dialogue.setFlag,
+    };
   }
 }

@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { Npc } from '../entities/Npc';
 import { Sign } from '../entities/Sign';
 import type { Interactable } from '../interactions/Interactable';
-import { getStringProperty } from './TiledProperties';
+import { getOptionalStringProperty, getStringProperty } from './TiledProperties';
 
 export interface CreatedMapEntity {
   interactable: Interactable;
@@ -19,7 +19,14 @@ export function createMapEntity(
 
   switch (object.type) {
     case 'npc': {
-      const npc = new Npc(scene, object.x, object.y, getStringProperty(object, 'message'));
+      const npc = new Npc(scene, object.x, object.y, {
+        defaultMessage: getStringProperty(object, 'message'),
+        setFlag: getOptionalStringProperty(object, 'setFlag'),
+        startedFlag: getOptionalStringProperty(object, 'startedFlag'),
+        startedMessage: getOptionalStringProperty(object, 'startedMessage'),
+        completedFlag: getOptionalStringProperty(object, 'completedFlag'),
+        completedMessage: getOptionalStringProperty(object, 'completedMessage'),
+      });
 
       return {
         interactable: npc,
@@ -28,7 +35,13 @@ export function createMapEntity(
     }
 
     case 'sign': {
-      const sign = new Sign(scene, object.x, object.y, getStringProperty(object, 'message'));
+      const sign = new Sign(
+        scene,
+        object.x,
+        object.y,
+        getStringProperty(object, 'message'),
+        getOptionalStringProperty(object, 'setFlag'),
+      );
 
       return {
         interactable: sign,

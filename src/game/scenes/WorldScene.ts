@@ -7,9 +7,7 @@ import type { MapTransition } from '../maps/MapTransition';
 import { getStringProperty } from '../maps/TiledProperties';
 import { UIScene } from './UIScene';
 import { createPlayerAnimations } from '../animations/PlayerAnimations';
-import type { TestObjectiveState } from '../gameplay/TestObjective';
-import type { Npc } from '../entities/Npc';
-import type { Sign } from '../entities/Sign';
+import { GameState } from '../gameplay/GameState';
 
 interface WorldSceneData {
   mapKey?: string;
@@ -24,12 +22,7 @@ export class WorldScene extends Phaser.Scene {
   private readonly interactables: Interactable[] = [];
   private readonly transitions: MapTransition[] = [];
   private isDialogueOpen = false;
-  private readonly objective: TestObjectiveState = {
-    started: false,
-    completed: false,
-  };
-  private questNpc?: Npc;
-  private questSign?: Sign;
+  private readonly gameState = new GameState();
 
   constructor() {
     super('WorldScene');
@@ -119,14 +112,6 @@ export class WorldScene extends Phaser.Scene {
       if (entity.physicsObject) {
         this.physics.add.collider(this.player.physicsObject, entity.physicsObject);
       }
-
-      if (object.name === 'quest-npc') {
-        this.questNpc = entity.interactable as Npc;
-      }
-
-      if (object.name === 'quest-sign') {
-        this.questSign = entity.interactable as Sign;
-      }
     }
 
     const transitionObjects = objects.objects.filter((object) => object.type === 'transition');
@@ -169,7 +154,7 @@ export class WorldScene extends Phaser.Scene {
     if (this.isDialogueOpen) {
       this.player.update({ x: 0, y: 0 });
 
-      if (this.inputController.consumeInteractPress() || this.uiScene.consumeInteractPress()) {
+      if (this.inputController.consumeInteractPress()) {
         this.closeDialogue();
       }
 
@@ -188,32 +173,13 @@ export class WorldScene extends Phaser.Scene {
       );
 
       if (interactable) {
-        if (interactable === this.questNpc) {
-          if (!this.objective.started) {
-            this.objective.started = true;
-            this.openDialogue('Could you check the old sign near the path?');
-            return;
-          }
+        const result = interactable.interact(this.gameState);
 
-          if (this.objective.completed) {
-            this.openDialogue('Thanks. That was exactly what I needed.');
-            return;
-          }
-
-          this.openDialogue('The sign is still out there.');
-          return;
+        if (result.setFlag) {
+          this.gameState.setFlag(result.setFlag);
         }
 
-        if (interactable === this.questSign) {
-          if (this.objective.started && !this.objective.completed) {
-            this.objective.completed = true;
-            this.openDialogue('The sign is badly weathered, but still readable.');
-            return;
-          }
-        }
-
-        const message = interactable.interact();
-        this.openDialogue(message);
+        this.openDialogue(result.message);
       }
     }
 
