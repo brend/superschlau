@@ -6,6 +6,7 @@ import { createMapEntity } from '../maps/MapEntityFactory';
 import type { MapTransition } from '../maps/MapTransition';
 import { getStringProperty } from '../maps/TiledProperties';
 import { UIScene } from './UIScene';
+import { createPlayerAnimations } from '../animations/PlayerAnimations';
 
 interface WorldSceneData {
   mapKey?: string;
@@ -49,6 +50,10 @@ export class WorldScene extends Phaser.Scene {
     this.isDialogueOpen = false;
     if (this.scene.isActive('UIScene')) {
       this.uiScene.hideDialogue();
+    }
+
+    if (!this.anims.exists('player-walk-down')) {
+      createPlayerAnimations(this.anims);
     }
 
     const map = this.make.tilemap({
