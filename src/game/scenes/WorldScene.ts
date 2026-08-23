@@ -7,6 +7,9 @@ import type { MapTransition } from '../maps/MapTransition';
 import { getStringProperty } from '../maps/TiledProperties';
 import { UIScene } from './UIScene';
 import { createPlayerAnimations } from '../animations/PlayerAnimations';
+import type { TestObjectiveState } from '../gameplay/TestObjective';
+import type { Npc } from '../entities/Npc';
+import type { Sign } from '../entities/Sign';
 
 interface WorldSceneData {
   mapKey?: string;
@@ -21,6 +24,12 @@ export class WorldScene extends Phaser.Scene {
   private readonly interactables: Interactable[] = [];
   private readonly transitions: MapTransition[] = [];
   private isDialogueOpen = false;
+  private readonly objective: TestObjectiveState = {
+    started: false,
+    completed: false,
+  };
+  private questNpc?: Npc;
+  private questSign?: Sign;
 
   constructor() {
     super('WorldScene');
@@ -110,6 +119,14 @@ export class WorldScene extends Phaser.Scene {
       if (entity.physicsObject) {
         this.physics.add.collider(this.player.physicsObject, entity.physicsObject);
       }
+
+      if (object.name === 'quest-npc') {
+        this.questNpc = entity.interactable as Npc;
+      }
+
+      if (object.name === 'quest-sign') {
+        this.questSign = entity.interactable as Sign;
+      }
     }
 
     const transitionObjects = objects.objects.filter((object) => object.type === 'transition');
@@ -171,8 +188,31 @@ export class WorldScene extends Phaser.Scene {
       );
 
       if (interactable) {
-        const message = interactable.interact();
+        if (interactable === this.questNpc) {
+          if (!this.objective.started) {
+            this.objective.started = true;
+            this.openDialogue('Could you check the old sign near the path?');
+            return;
+          }
 
+          if (this.objective.completed) {
+            this.openDialogue('Thanks. That was exactly what I needed.');
+            return;
+          }
+
+          this.openDialogue('The sign is still out there.');
+          return;
+        }
+
+        if (interactable === this.questSign) {
+          if (this.objective.started && !this.objective.completed) {
+            this.objective.completed = true;
+            this.openDialogue('The sign is badly weathered, but still readable.');
+            return;
+          }
+        }
+
+        const message = interactable.interact();
         this.openDialogue(message);
       }
     }
