@@ -138,6 +138,10 @@ export class WorldScene extends Phaser.Scene {
     if (!this.scene.isActive('UIScene')) {
       this.scene.launch('UIScene');
     }
+
+    this.events.on(Phaser.Scenes.Events.PAUSE, this.handlePause, this);
+    this.events.on(Phaser.Scenes.Events.RESUME, this.handleResume, this);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.handleShutdown, this);
   }
 
   update(): void {
@@ -208,5 +212,18 @@ export class WorldScene extends Phaser.Scene {
 
   private get uiScene(): UIScene {
     return this.scene.get('UIScene') as UIScene;
+  }
+
+  private handlePause(): void {
+    this.player.update({ x: 0, y: 0 });
+  }
+
+  private handleResume(): void {
+    this.player.update({ x: 0, y: 0 });
+  }
+
+  private handleShutdown(): void {
+    this.events.off(Phaser.Scenes.Events.PAUSE, this.handlePause, this);
+    this.events.off(Phaser.Scenes.Events.RESUME, this.handlePause, this);
   }
 }
