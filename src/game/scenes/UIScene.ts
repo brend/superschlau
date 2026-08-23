@@ -2,8 +2,9 @@ import Phaser from 'phaser';
 import { VirtualJoystick } from '../input/VirtualJoystick';
 import { VirtualButton } from '../input/VirtualButton';
 import type { MovementInput } from '../input/MovementInput';
+import type { InputSource } from '../input/InputSource';
 
-export class UIScene extends Phaser.Scene {
+export class UIScene extends Phaser.Scene implements InputSource {
   private joystick!: VirtualJoystick;
   private interactButton!: VirtualButton;
 
@@ -16,13 +17,7 @@ export class UIScene extends Phaser.Scene {
 
     this.joystick = new VirtualJoystick(this, 72, 408);
 
-    this.interactButton = new VirtualButton(
-      this,
-      568,
-      408,
-      32,
-      'A',
-    );
+    this.interactButton = new VirtualButton(this, 568, 408, 32, 'A');
   }
 
   getMovement(): MovementInput {

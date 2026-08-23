@@ -1,7 +1,8 @@
 import Phaser from 'phaser';
 import type { MovementInput } from './MovementInput';
+import type { InputSource } from './InputSource';
 
-export class KeyboardInput {
+export class KeyboardInput implements InputSource {
   private readonly cursors: Phaser.Types.Input.Keyboard.CursorKeys;
   private readonly interactKey: Phaser.Input.Keyboard.Key;
 

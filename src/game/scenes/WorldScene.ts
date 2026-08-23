@@ -16,7 +16,7 @@ export class WorldScene extends Phaser.Scene {
   private mapKey = 'test-map';
   private spawnName = 'spawn-default';
   private player!: Player;
-  private inputController!: InputController;
+  private inputController?: InputController;
   private readonly interactables: Interactable[] = [];
   private readonly transitions: MapTransition[] = [];
   private dialogueText!: Phaser.GameObjects.Text;
@@ -46,6 +46,7 @@ export class WorldScene extends Phaser.Scene {
   create(): void {
     this.interactables.length = 0;
     this.transitions.length = 0;
+    this.inputController = undefined;
 
     const map = this.make.tilemap({
       key: this.mapKey,
@@ -122,8 +123,6 @@ export class WorldScene extends Phaser.Scene {
       });
     }
 
-    this.inputController = new InputController(this);
-
     this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
 
     this.dialogueText = this.add
@@ -148,6 +147,16 @@ export class WorldScene extends Phaser.Scene {
   }
 
   update(): void {
+    if (!this.inputController) {
+      const uiScene = this.scene.get('UIScene') as UIScene;
+
+      if (!this.scene.isActive('UIScene')) {
+        return;
+      }
+
+      this.inputController = new InputController(this, uiScene);
+    }
+
     if (this.isDialogueOpen) {
       this.player.update({ x: 0, y: 0 });
 
@@ -158,18 +167,13 @@ export class WorldScene extends Phaser.Scene {
       return;
     }
 
-    const keyboardMovement = this.inputController.getMovement();
-
-    const touchMovement = this.uiScene.getMovement();
-
-    const movement =
-      keyboardMovement.x !== 0 || keyboardMovement.y !== 0 ? keyboardMovement : touchMovement;
+    const movement = this.inputController.getMovement();
 
     this.player.update(movement);
 
     const point = this.player.getInteractionPoint();
 
-    if (this.inputController.consumeInteractPress() || this.uiScene.consumeInteractPress()) {
+    if (this.inputController.consumeInteractPress()) {
       const interactable = this.interactables.find((candidate) =>
         candidate.interactionBounds.contains(point.x, point.y),
       );
