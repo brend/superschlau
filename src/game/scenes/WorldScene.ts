@@ -15,6 +15,12 @@ interface WorldSceneData {
   spawnName?: string;
 }
 
+interface RemotePlayerView {
+  gameObject: Phaser.GameObjects.Rectangle;
+  targetX: number;
+  targetY: number;
+}
+
 export class WorldScene extends Phaser.Scene {
   private mapKey = 'test-map';
   private spawnName = 'spawn-default';
@@ -24,7 +30,7 @@ export class WorldScene extends Phaser.Scene {
   private readonly transitions: MapTransition[] = [];
   private isDialogueOpen = false;
   private readonly gameState = new GameState();
-  private readonly remotePlayers = new Map<string, Phaser.GameObjects.Rectangle>();
+  private readonly remotePlayers = new Map<string, RemotePlayerView>();
   private unsubscribePlayerAdded?: () => void;
   private unsubscribePlayerRemoved?: () => void;
   private unsubscribePlayerChanged?: () => void;
@@ -166,7 +172,8 @@ export class WorldScene extends Phaser.Scene {
       const remotePlayer = this.remotePlayers.get(state.sessionId);
 
       if (remotePlayer) {
-        remotePlayer.setPosition(state.x, state.y);
+        remotePlayer.targetX = state.x;
+        remotePlayer.targetY = state.y;
       }
     });
 
@@ -190,6 +197,20 @@ export class WorldScene extends Phaser.Scene {
       }
 
       this.inputController = new InputController(this, uiScene);
+    }
+
+    for (const remotePlayer of this.remotePlayers.values()) {
+      remotePlayer.gameObject.x = Phaser.Math.Linear(
+        remotePlayer.gameObject.x,
+        remotePlayer.targetX,
+        0.2,
+      );
+
+      remotePlayer.gameObject.y = Phaser.Math.Linear(
+        remotePlayer.gameObject.y,
+        remotePlayer.targetY,
+        0.2,
+      );
     }
 
     if (this.isDialogueOpen) {
@@ -277,9 +298,19 @@ export class WorldScene extends Phaser.Scene {
       return;
     }
 
-    const player = this.add.rectangle(360 + 30 * this.remotePlayers.size, 240, 24, 24, 0xff00ff);
+    const gameObject = this.add.rectangle(
+      360 + 30 * this.remotePlayers.size,
+      240,
+      24,
+      24,
+      0xff00ff,
+    );
 
-    this.remotePlayers.set(sessionId, player);
+    this.remotePlayers.set(sessionId, {
+      gameObject,
+      targetX: gameObject.x,
+      targetY: gameObject.y,
+    });
   }
 
   private removeRemotePlayer(sessionId: string): void {
@@ -289,7 +320,7 @@ export class WorldScene extends Phaser.Scene {
       return;
     }
 
-    player.destroy();
+    player.gameObject.destroy();
 
     this.remotePlayers.delete(sessionId);
   }
