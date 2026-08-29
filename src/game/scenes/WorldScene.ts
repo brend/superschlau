@@ -8,6 +8,7 @@ import { getStringProperty } from '../maps/TiledProperties';
 import { UIScene } from './UIScene';
 import { createPlayerAnimations } from '../animations/PlayerAnimations';
 import { GameState } from '../gameplay/GameState';
+import { gameClient } from '../network/network';
 
 interface WorldSceneData {
   mapKey?: string;
@@ -23,6 +24,9 @@ export class WorldScene extends Phaser.Scene {
   private readonly transitions: MapTransition[] = [];
   private isDialogueOpen = false;
   private readonly gameState = new GameState();
+  private readonly remotePlayers = new Map<string, Phaser.GameObjects.Rectangle>();
+  private unsubscribePlayerAdded?: () => void;
+  private unsubscribePlayerRemoved?: () => void;
 
   constructor() {
     super('WorldScene');
@@ -48,6 +52,7 @@ export class WorldScene extends Phaser.Scene {
   create(): void {
     this.interactables.length = 0;
     this.transitions.length = 0;
+    this.remotePlayers.clear();
     this.inputController = undefined;
     this.isDialogueOpen = false;
     if (this.scene.isActive('UIScene')) {
@@ -139,6 +144,24 @@ export class WorldScene extends Phaser.Scene {
       this.scene.launch('UIScene');
     }
 
+    this.unsubscribePlayerAdded = gameClient.onPlayerAdded((sessionId) => {
+      if (sessionId === gameClient.sessionId) {
+        return;
+      }
+
+      this.addRemotePlayer(sessionId);
+    });
+
+    this.unsubscribePlayerRemoved = gameClient.onPlayerRemoved((sessionId) => {
+      this.removeRemotePlayer(sessionId);
+    });
+
+    for (const sessionId of gameClient.getPlayerSessionIds()) {
+      if (sessionId !== gameClient.sessionId) {
+        this.addRemotePlayer(sessionId);
+      }
+    }
+
     this.events.on(Phaser.Scenes.Events.PAUSE, this.handlePause, this);
     this.events.on(Phaser.Scenes.Events.RESUME, this.handleResume, this);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.handleShutdown, this);
@@ -223,7 +246,35 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private handleShutdown(): void {
+    this.unsubscribePlayerAdded?.();
+    this.unsubscribePlayerRemoved?.();
+
+    this.unsubscribePlayerAdded = undefined;
+    this.unsubscribePlayerRemoved = undefined;
+
     this.events.off(Phaser.Scenes.Events.PAUSE, this.handlePause, this);
     this.events.off(Phaser.Scenes.Events.RESUME, this.handlePause, this);
+  }
+
+  private addRemotePlayer(sessionId: string): void {
+    if (this.remotePlayers.has(sessionId)) {
+      return;
+    }
+
+    const player = this.add.rectangle(360 + 30 * this.remotePlayers.size, 240, 24, 24, 0xff00ff);
+
+    this.remotePlayers.set(sessionId, player);
+  }
+
+  private removeRemotePlayer(sessionId: string): void {
+    const player = this.remotePlayers.get(sessionId);
+
+    if (!player) {
+      return;
+    }
+
+    player.destroy();
+
+    this.remotePlayers.delete(sessionId);
   }
 }
