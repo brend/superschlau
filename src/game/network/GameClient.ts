@@ -1,10 +1,18 @@
 import { Callbacks, Client, type Room } from '@colyseus/sdk';
+import type { MovementInput } from '../input/MovementInput';
+
+export interface NetworkPlayerState {
+  sessionId: string;
+  x: number;
+  y: number;
+}
 
 export class GameClient {
   private readonly client: Client;
   private room?: Room;
   private playerAddedHandlers: Array<(sessionId: string) => void> = [];
   private playerRemovedHandlers: Array<(sessionId: string) => void> = [];
+  private playerChangedHandlers: Array<(player: NetworkPlayerState) => void> = [];
 
   constructor(endpoint: string) {
     this.client = new Client(endpoint);
@@ -17,10 +25,19 @@ export class GameClient {
 
     const callbacks = Callbacks.get(this.room);
 
-    callbacks.onAdd('players', (_player, sessionId) => {
+    callbacks.onAdd('players', (player, sessionId) => {
+      const sessionIdString = sessionId as string;
+      const playerObject = player as { x: number; y: number };
+
       for (const handler of this.playerAddedHandlers) {
-        handler(sessionId as string);
+        handler(sessionIdString);
       }
+
+      this.notifyPlayerChanged(sessionIdString, playerObject);
+
+      callbacks.onChange(playerObject, () => {
+        this.notifyPlayerChanged(sessionIdString, playerObject);
+      });
     });
 
     callbacks.onRemove('players', (_player, sessionId) => {
@@ -58,6 +75,18 @@ export class GameClient {
     };
   }
 
+  onPlayerChanged(handler: (player: NetworkPlayerState) => void): () => void {
+    this.playerChangedHandlers.push(handler);
+
+    return () => {
+      const index = this.playerChangedHandlers.indexOf(handler);
+
+      if (index >= 0) {
+        this.playerChangedHandlers.splice(index, 1);
+      }
+    };
+  }
+
   get sessionId(): string | undefined {
     return this.room?.sessionId;
   }
@@ -68,5 +97,21 @@ export class GameClient {
     }
 
     return Array.from(this.room.state.players.keys());
+  }
+
+  sendMovement(input: MovementInput): void {
+    this.room?.send('move', input);
+  }
+
+  private notifyPlayerChanged(sessionId: string, player: { x: number; y: number }): void {
+    const state: NetworkPlayerState = {
+      sessionId,
+      x: player.x,
+      y: player.y,
+    };
+
+    for (const handler of this.playerChangedHandlers) {
+      handler(state);
+    }
   }
 }

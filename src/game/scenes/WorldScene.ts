@@ -27,6 +27,7 @@ export class WorldScene extends Phaser.Scene {
   private readonly remotePlayers = new Map<string, Phaser.GameObjects.Rectangle>();
   private unsubscribePlayerAdded?: () => void;
   private unsubscribePlayerRemoved?: () => void;
+  private unsubscribePlayerChanged?: () => void;
 
   constructor() {
     super('WorldScene');
@@ -156,6 +157,19 @@ export class WorldScene extends Phaser.Scene {
       this.removeRemotePlayer(sessionId);
     });
 
+    this.unsubscribePlayerChanged = gameClient.onPlayerChanged((state) => {
+      if (state.sessionId === gameClient.sessionId) {
+        this.player.setPosition(state.x, state.y);
+        return;
+      }
+
+      const remotePlayer = this.remotePlayers.get(state.sessionId);
+
+      if (remotePlayer) {
+        remotePlayer.setPosition(state.x, state.y);
+      }
+    });
+
     for (const sessionId of gameClient.getPlayerSessionIds()) {
       if (sessionId !== gameClient.sessionId) {
         this.addRemotePlayer(sessionId);
@@ -179,7 +193,7 @@ export class WorldScene extends Phaser.Scene {
     }
 
     if (this.isDialogueOpen) {
-      this.player.update({ x: 0, y: 0 });
+      gameClient.sendMovement({ x: 0, y: 0 });
 
       if (this.inputController.consumeInteractPress()) {
         this.closeDialogue();
@@ -190,7 +204,7 @@ export class WorldScene extends Phaser.Scene {
 
     const movement = this.inputController.getMovement();
 
-    this.player.update(movement);
+    gameClient.sendMovement(movement);
 
     const point = this.player.getInteractionPoint();
 
@@ -238,22 +252,24 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private handlePause(): void {
-    this.player.update({ x: 0, y: 0 });
+    gameClient.sendMovement({ x: 0, y: 0 });
   }
 
   private handleResume(): void {
-    this.player.update({ x: 0, y: 0 });
+    gameClient.sendMovement({ x: 0, y: 0 });
   }
 
   private handleShutdown(): void {
     this.unsubscribePlayerAdded?.();
     this.unsubscribePlayerRemoved?.();
+    this.unsubscribePlayerChanged?.();
 
     this.unsubscribePlayerAdded = undefined;
     this.unsubscribePlayerRemoved = undefined;
+    this.unsubscribePlayerChanged = undefined;
 
     this.events.off(Phaser.Scenes.Events.PAUSE, this.handlePause, this);
-    this.events.off(Phaser.Scenes.Events.RESUME, this.handlePause, this);
+    this.events.off(Phaser.Scenes.Events.RESUME, this.handleResume, this);
   }
 
   private addRemotePlayer(sessionId: string): void {

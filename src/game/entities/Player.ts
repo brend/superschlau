@@ -86,6 +86,10 @@ export class Player {
     return point;
   }
 
+  setPosition(x: number, y: number): void {
+    this.gameObject.setPosition(x, y);
+  }
+
   private setIdleFrame(): void {
     this.gameObject.stop();
 
