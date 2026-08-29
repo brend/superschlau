@@ -21,6 +21,11 @@ interface RemotePlayerView {
   targetY: number;
 }
 
+interface AuthoritativePlayerPosition {
+  x: number;
+  y: number;
+}
+
 export class WorldScene extends Phaser.Scene {
   private mapKey = 'test-map';
   private spawnName = 'spawn-default';
@@ -34,6 +39,7 @@ export class WorldScene extends Phaser.Scene {
   private unsubscribePlayerAdded?: () => void;
   private unsubscribePlayerRemoved?: () => void;
   private unsubscribePlayerChanged?: () => void;
+  private authoritativePlayerPosition?: AuthoritativePlayerPosition;
 
   constructor() {
     super('WorldScene');
@@ -165,7 +171,11 @@ export class WorldScene extends Phaser.Scene {
 
     this.unsubscribePlayerChanged = gameClient.onPlayerChanged((state) => {
       if (state.sessionId === gameClient.sessionId) {
-        this.player.setPosition(state.x, state.y);
+        this.authoritativePlayerPosition = {
+          x: state.x,
+          y: state.y,
+        };
+
         return;
       }
 
@@ -214,7 +224,10 @@ export class WorldScene extends Phaser.Scene {
     }
 
     if (this.isDialogueOpen) {
-      gameClient.sendMovement({ x: 0, y: 0 });
+      const movement = { x: 0, y: 0 };
+
+      gameClient.sendMovement(movement);
+      this.player.update(movement);
 
       if (this.inputController.consumeInteractPress()) {
         this.closeDialogue();
@@ -226,6 +239,9 @@ export class WorldScene extends Phaser.Scene {
     const movement = this.inputController.getMovement();
 
     gameClient.sendMovement(movement);
+    this.player.update(movement);
+
+    this.reconcileLocalPlayer();
 
     const point = this.player.getInteractionPoint();
 
@@ -273,11 +289,14 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private handlePause(): void {
-    gameClient.sendMovement({ x: 0, y: 0 });
+    const movement = { x: 0, y: 0 };
+
+    gameClient.sendMovement(movement);
+    this.player.update(movement);
   }
 
   private handleResume(): void {
-    gameClient.sendMovement({ x: 0, y: 0 });
+    this.player.update({ x: 0, y: 0 });
   }
 
   private handleShutdown(): void {
@@ -323,5 +342,27 @@ export class WorldScene extends Phaser.Scene {
     player.gameObject.destroy();
 
     this.remotePlayers.delete(sessionId);
+  }
+
+  private reconcileLocalPlayer(): void {
+    if (!this.authoritativePlayerPosition) {
+      return;
+    }
+
+    const player = this.player.physicsObject;
+
+    const differenceX = this.authoritativePlayerPosition.x - player.x;
+    const differenceY = this.authoritativePlayerPosition.y - player.y;
+
+    const distance = Math.hypot(differenceX, differenceY);
+
+    if (distance < 2) {
+      return;
+    }
+
+    player.setPosition(
+      Phaser.Math.Linear(player.x, this.authoritativePlayerPosition.x, 0.1),
+      Phaser.Math.Linear(player.y, this.authoritativePlayerPosition.y, 0.1),
+    );
   }
 }
