@@ -1,5 +1,14 @@
 import { Room, Client } from 'colyseus';
 import { GameState, PlayerState } from './GameState.js';
+import {
+  loadMapBounds,
+  loadCollisionMaps,
+  loadTransitions,
+  rectangleOverlapsCollision,
+  type Rectangle,
+  type TransitionDefinition,
+  type CollisionMap,
+} from './MapData.js';
 
 interface MovementInput {
   sequence: number;
@@ -12,55 +21,19 @@ interface TransitionRequest {
   movementSequence: number;
 }
 
-interface TransitionDefinition {
-  sourceMap: string;
-  bounds: {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-  };
-  targetMap: string;
-  targetX: number;
-  targetY: number;
-}
-
-const TRANSITIONS = new Map<string, TransitionDefinition>([
-  [
-    'outdoor-to-house',
-    {
-      sourceMap: 'test-map',
-      bounds: {
-        x: 198.531692689484,
-        y: 214.414228104643,
-        width: 38.3827939199669,
-        height: 21.1767138868783,
-      },
-      targetMap: 'house',
-      targetX: 143.529193353755,
-      targetY: 281.355239951731,
-    },
-  ],
-  [
-    'house-to-outdoor',
-    {
-      sourceMap: 'house',
-      bounds: {
-        x: 129.271326464309,
-        y: 289.909960085399,
-        width: 61.7840898542653,
-        height: 28.5157337788917,
-      },
-      targetMap: 'test-map',
-      targetX: 214.414228104643,
-      targetY: 250.14993278875,
-    },
-  ],
-]);
-
 const TICK_RATE = 60;
 const FIXED_TIME_STEP = 1000 / TICK_RATE;
 const MOVE_SPEED = 120;
+
+const PLAYER_BODY_OFFSET_X = 6;
+const PLAYER_BODY_OFFSET_Y = 14;
+const PLAYER_BODY_WIDTH = 20;
+const PLAYER_BODY_HEIGHT = 16;
+const PLAYER_SPRITE_SIZE = 32;
+
+const TRANSITIONS = loadTransitions();
+const MAP_BOUNDS = loadMapBounds();
+const COLLISION_MAPS = loadCollisionMaps();
 
 export class GameRoom extends Room {
   private readonly movementInputs = new Map<string, MovementInput[]>();
@@ -90,6 +63,16 @@ export class GameRoom extends Room {
     });
 
     console.log(`Room created: ${this.roomId}`);
+
+    this.logCollisionMaps();
+  }
+
+  private logCollisionMaps(): void {
+    for (const [mapKey, collisionMap] of COLLISION_MAPS) {
+      console.log(
+        `[SERVER] Loaded collision map "${mapKey}": ${collisionMap.width}x${collisionMap.height} tiles, ${countCollidingTiles(collisionMap)} colliding tiles`,
+      );
+    }
   }
 
   onJoin(client: Client): void {
@@ -149,8 +132,6 @@ export class GameRoom extends Room {
   }
 
   private fixedTick(): void {
-    const deltaSeconds = FIXED_TIME_STEP / 1000;
-
     for (const [sessionId, queue] of this.movementInputs) {
       const player = this.state.players.get(sessionId);
 
@@ -244,10 +225,53 @@ export class GameRoom extends Room {
 
   private applyMovementInput(player: PlayerState, input: MovementInput): void {
     const deltaSeconds = FIXED_TIME_STEP / 1000;
+    const deltaX = input.x * MOVE_SPEED * deltaSeconds;
+    const deltaY = input.y * MOVE_SPEED * deltaSeconds;
 
-    player.x += input.x * MOVE_SPEED * deltaSeconds;
-    player.y += input.y * MOVE_SPEED * deltaSeconds;
+    this.movePlayer(player, deltaX, 0);
+    this.movePlayer(player, 0, deltaY);
+
     player.lastProcessedInput = input.sequence;
+  }
+
+  private movePlayer(player: PlayerState, deltaX: number, deltaY: number): void {
+    if (deltaX === 0 && deltaY === 0) {
+      return;
+    }
+
+    const previousX = player.x;
+    const previousY = player.y;
+
+    player.x += deltaX;
+    player.y += deltaY;
+
+    this.clampPlayerToMapBounds(player);
+
+    if (this.playerOverlapsCollision(player)) {
+      player.x = previousX;
+      player.y = previousY;
+    }
+  }
+
+  private clampPlayerToMapBounds(player: PlayerState): void {
+    const bounds = MAP_BOUNDS.get(player.mapKey);
+
+    if (!bounds) {
+      return;
+    }
+
+    player.x = clamp(player.x, 0, bounds.width);
+    player.y = clamp(player.y, 0, bounds.height);
+  }
+
+  private playerOverlapsCollision(player: PlayerState): boolean {
+    const collisionMap = COLLISION_MAPS.get(player.mapKey);
+
+    if (!collisionMap) {
+      return false;
+    }
+
+    return rectangleOverlapsCollision(collisionMap, this.getPlayerCollisionRectangle(player));
   }
 
   private processMovementInputsThrough(sessionId: string, sequence: number): void {
@@ -271,4 +295,21 @@ export class GameRoom extends Room {
       reason,
     });
   }
+
+  private getPlayerCollisionRectangle(player: PlayerState): Rectangle {
+    return {
+      x: player.x - PLAYER_SPRITE_SIZE / 2 + PLAYER_BODY_OFFSET_X,
+      y: player.y - PLAYER_SPRITE_SIZE / 2 + PLAYER_BODY_OFFSET_Y,
+      width: PLAYER_BODY_WIDTH,
+      height: PLAYER_BODY_HEIGHT,
+    };
+  }
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(Math.max(value, min), max);
+}
+
+function countCollidingTiles(collisionMap: CollisionMap): number {
+  return collisionMap.collides.filter(Boolean).length;
 }
