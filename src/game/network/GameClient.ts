@@ -99,12 +99,24 @@ export class GameClient {
     return this.room?.sessionId;
   }
 
-  getPlayerSessionIds(): string[] {
+  getPlayers(): NetworkPlayerState[] {
     if (!this.room) {
       return [];
     }
 
-    return Array.from(this.room.state.players.keys());
+    const players: NetworkPlayerState[] = [];
+
+    for (const [sessionId, player] of this.room.state.players) {
+      players.push({
+        sessionId,
+        mapKey: player.mapKey,
+        x: player.x,
+        y: player.y,
+        lastProcessedInput: player.lastProcessedInput,
+      });
+    }
+
+    return players;
   }
 
   sendMovement(input: MovementInput): number | undefined {

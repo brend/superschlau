@@ -48,6 +48,7 @@ export class WorldScene extends Phaser.Scene {
   private pendingMovementInputs: PendingMovementInput[] = [];
   private authoritativeX?: number;
   private authoritativeY?: number;
+  private transitionInProgress = false;
 
   constructor() {
     super('WorldScene');
@@ -85,6 +86,7 @@ export class WorldScene extends Phaser.Scene {
     this.inputController = undefined;
     this.isDialogueOpen = false;
     this.elapsedTime = 0;
+    this.transitionInProgress = false;
     if (this.scene.isActive('UIScene')) {
       this.uiScene.hideDialogue();
     }
@@ -245,9 +247,19 @@ export class WorldScene extends Phaser.Scene {
       }
     });
 
-    for (const sessionId of gameClient.getPlayerSessionIds()) {
-      if (sessionId !== gameClient.sessionId) {
-        this.addRemotePlayer(sessionId);
+    for (const state of gameClient.getPlayers()) {
+      if (state.sessionId === gameClient.sessionId || state.mapKey !== this.mapKey) {
+        continue;
+      }
+
+      this.addRemotePlayer(state.sessionId);
+
+      const remotePlayer = this.remotePlayers.get(state.sessionId);
+
+      if (remotePlayer) {
+        remotePlayer.gameObject.setPosition(state.x, state.y);
+        remotePlayer.targetX = state.x;
+        remotePlayer.targetY = state.y;
       }
     }
 
@@ -318,11 +330,14 @@ export class WorldScene extends Phaser.Scene {
     const x = this.player.physicsObject.x;
     const y = this.player.physicsObject.y;
 
-    const transition = this.transitions.find((candidate) => candidate.bounds.contains(x, y));
+    if (!this.transitionInProgress) {
+      const transition = this.transitions.find((candidate) => candidate.bounds.contains(x, y));
 
-    if (transition) {
-      console.log(`[CLIENT] Requesting transition "${transition.id}" from map "${this.mapKey}"`);
-      gameClient.requestTransition(transition.id);
+      if (transition) {
+        console.log(`[CLIENT] Requesting transition "${transition.id}" from map "${this.mapKey}"`);
+        this.transitionInProgress = true;
+        gameClient.requestTransition(transition.id);
+      }
     }
   }
 
