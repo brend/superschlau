@@ -9,10 +9,13 @@ import { UIScene } from './UIScene';
 import { createPlayerAnimations } from '../animations/PlayerAnimations';
 import { GameState } from '../gameplay/GameState';
 import { gameClient } from '../network/network';
+import type { NetworkPlayerState } from '../network/GameClient';
 
 interface WorldSceneData {
   mapKey?: string;
   spawnName?: string;
+  authoritativeX?: number;
+  authoritativeY?: number;
 }
 
 interface RemotePlayerView {
@@ -21,7 +24,8 @@ interface RemotePlayerView {
   targetY: number;
 }
 
-interface AuthoritativePlayerPosition {
+interface PendingMovementInput {
+  sequence: number;
   x: number;
   y: number;
 }
@@ -39,7 +43,11 @@ export class WorldScene extends Phaser.Scene {
   private unsubscribePlayerAdded?: () => void;
   private unsubscribePlayerRemoved?: () => void;
   private unsubscribePlayerChanged?: () => void;
-  private authoritativePlayerPosition?: AuthoritativePlayerPosition;
+  private elapsedTime = 0;
+  private readonly fixedTimeStep = 1000 / 60;
+  private pendingMovementInputs: PendingMovementInput[] = [];
+  private authoritativeX?: number;
+  private authoritativeY?: number;
 
   constructor() {
     super('WorldScene');
@@ -48,6 +56,9 @@ export class WorldScene extends Phaser.Scene {
   init(data: WorldSceneData): void {
     this.mapKey = data.mapKey ?? 'test-map';
     this.spawnName = data.spawnName ?? 'spawn-default';
+
+    this.authoritativeX = data.authoritativeX;
+    this.authoritativeY = data.authoritativeY;
   }
 
   preload(): void {
@@ -63,11 +74,17 @@ export class WorldScene extends Phaser.Scene {
   }
 
   create(): void {
+    console.log(
+      `[CLIENT] Creating WorldScene: map="${this.mapKey}", authoritativePosition=(${this.authoritativeX}, ${this.authoritativeY})`,
+    );
+
     this.interactables.length = 0;
     this.transitions.length = 0;
+    this.pendingMovementInputs.length = 0;
     this.remotePlayers.clear();
     this.inputController = undefined;
     this.isDialogueOpen = false;
+    this.elapsedTime = 0;
     if (this.scene.isActive('UIScene')) {
       this.uiScene.hideDialogue();
     }
@@ -86,9 +103,17 @@ export class WorldScene extends Phaser.Scene {
       throw new Error('Objects layer could not be found.');
     }
 
-    const playerSpawn = objects.objects.find((object) => object.name === this.spawnName);
+    const hasAuthoritativePosition =
+      this.authoritativeX !== undefined && this.authoritativeY !== undefined;
 
-    if (!playerSpawn || playerSpawn.x === undefined || playerSpawn.y === undefined) {
+    const playerSpawn = hasAuthoritativePosition
+      ? undefined
+      : objects.objects.find((object) => object.name === this.spawnName);
+
+    if (
+      !hasAuthoritativePosition &&
+      (!playerSpawn || playerSpawn.x === undefined || playerSpawn.y === undefined)
+    ) {
       throw new Error(
         `Player spawn "${this.spawnName}" could not be found in map "${this.mapKey}"`,
       );
@@ -112,7 +137,15 @@ export class WorldScene extends Phaser.Scene {
       collides: true,
     });
 
-    this.player = new Player(this, playerSpawn.x, playerSpawn.y);
+    const playerX = hasAuthoritativePosition ? this.authoritativeX! : playerSpawn!.x!;
+    const playerY = hasAuthoritativePosition ? this.authoritativeY! : playerSpawn!.y!;
+
+    this.player = new Player(this, playerX, playerY);
+
+    console.log(`[CLIENT] Player created on "${this.mapKey}" at (${playerX}, ${playerY})`);
+
+    this.authoritativeX = undefined;
+    this.authoritativeY = undefined;
 
     this.physics.add.collider(this.player.physicsObject, ground);
 
@@ -145,6 +178,7 @@ export class WorldScene extends Phaser.Scene {
       }
 
       this.transitions.push({
+        id: getStringProperty(object, 'transitionId'),
         bounds: new Phaser.Geom.Rectangle(object.x, object.y, object.width, object.height),
         targetMap: getStringProperty(object, 'targetMap'),
         targetSpawn: getStringProperty(object, 'targetSpawn'),
@@ -171,13 +205,37 @@ export class WorldScene extends Phaser.Scene {
 
     this.unsubscribePlayerChanged = gameClient.onPlayerChanged((state) => {
       if (state.sessionId === gameClient.sessionId) {
-        this.authoritativePlayerPosition = {
-          x: state.x,
-          y: state.y,
-        };
+        if (state.mapKey !== this.mapKey) {
+          console.log(
+            `[CLIENT] Authoritative map change: "${this.mapKey}" -> "${state.mapKey}" at (${state.x}, ${state.y})`,
+          );
 
+          this.pendingMovementInputs.length = 0;
+
+          this.scene.restart({
+            mapKey: state.mapKey,
+            spawnName: undefined,
+            authoritativeX: state.x,
+            authoritativeY: state.y,
+          });
+
+          return;
+        }
+
+        this.reconcileLocalPlayer(state);
         return;
       }
+
+      if (state.mapKey !== this.mapKey) {
+        console.log(`[CLIENT] Player created on "${this.mapKey}" at (${playerX}, ${playerY})`);
+
+        this.removeRemotePlayer(state.sessionId);
+        return;
+      }
+
+      console.log(`[CLIENT] Remote ${state.sessionId} is on local map "${this.mapKey}"`);
+
+      this.addRemotePlayer(state.sessionId);
 
       const remotePlayer = this.remotePlayers.get(state.sessionId);
 
@@ -198,7 +256,7 @@ export class WorldScene extends Phaser.Scene {
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.handleShutdown, this);
   }
 
-  update(): void {
+  update(_time: number, delta: number): void {
     if (!this.inputController) {
       const uiScene = this.scene.get('UIScene') as UIScene;
 
@@ -209,6 +267,7 @@ export class WorldScene extends Phaser.Scene {
       this.inputController = new InputController(this, uiScene);
     }
 
+    // remote visual interpolation
     for (const remotePlayer of this.remotePlayers.values()) {
       remotePlayer.gameObject.x = Phaser.Math.Linear(
         remotePlayer.gameObject.x,
@@ -223,25 +282,20 @@ export class WorldScene extends Phaser.Scene {
       );
     }
 
+    this.elapsedTime += delta;
+
+    while (this.elapsedTime >= this.fixedTimeStep) {
+      this.elapsedTime -= this.fixedTimeStep;
+      this.fixedTick();
+    }
+
     if (this.isDialogueOpen) {
-      const movement = { x: 0, y: 0 };
-
-      gameClient.sendMovement(movement);
-      this.player.update(movement);
-
       if (this.inputController.consumeInteractPress()) {
         this.closeDialogue();
       }
 
       return;
     }
-
-    const movement = this.inputController.getMovement();
-
-    gameClient.sendMovement(movement);
-    this.player.update(movement);
-
-    this.reconcileLocalPlayer();
 
     const point = this.player.getInteractionPoint();
 
@@ -267,11 +321,29 @@ export class WorldScene extends Phaser.Scene {
     const transition = this.transitions.find((candidate) => candidate.bounds.contains(x, y));
 
     if (transition) {
-      this.scene.restart({
-        mapKey: transition.targetMap,
-        spawnName: transition.targetSpawn,
+      console.log(`[CLIENT] Requesting transition "${transition.id}" from map "${this.mapKey}"`);
+      gameClient.requestTransition(transition.id);
+    }
+  }
+
+  private fixedTick(): void {
+    if (!this.inputController) {
+      return;
+    }
+
+    const movement = this.isDialogueOpen ? { x: 0, y: 0 } : this.inputController.getMovement();
+
+    const sequence = gameClient.sendMovement(movement);
+
+    if (sequence !== undefined) {
+      this.pendingMovementInputs.push({
+        sequence,
+        x: movement.x,
+        y: movement.y,
       });
     }
+
+    this.player.applyMovementStep(movement, this.fixedTimeStep / 1000);
   }
 
   private openDialogue(message: string): void {
@@ -344,25 +416,15 @@ export class WorldScene extends Phaser.Scene {
     this.remotePlayers.delete(sessionId);
   }
 
-  private reconcileLocalPlayer(): void {
-    if (!this.authoritativePlayerPosition) {
-      return;
-    }
-
-    const player = this.player.physicsObject;
-
-    const differenceX = this.authoritativePlayerPosition.x - player.x;
-    const differenceY = this.authoritativePlayerPosition.y - player.y;
-
-    const distance = Math.hypot(differenceX, differenceY);
-
-    if (distance < 2) {
-      return;
-    }
-
-    player.setPosition(
-      Phaser.Math.Linear(player.x, this.authoritativePlayerPosition.x, 0.1),
-      Phaser.Math.Linear(player.y, this.authoritativePlayerPosition.y, 0.1),
+  private reconcileLocalPlayer(state: NetworkPlayerState): void {
+    this.pendingMovementInputs = this.pendingMovementInputs.filter(
+      (input) => input.sequence > state.lastProcessedInput,
     );
+
+    this.player.setPosition(state.x, state.y);
+
+    for (const input of this.pendingMovementInputs) {
+      this.player.applyMovementStep(input, this.fixedTimeStep / 1000);
+    }
   }
 }

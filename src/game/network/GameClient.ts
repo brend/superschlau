@@ -3,8 +3,10 @@ import type { MovementInput } from '../input/MovementInput';
 
 export interface NetworkPlayerState {
   sessionId: string;
+  mapKey: string;
   x: number;
   y: number;
+  lastProcessedInput: number;
 }
 
 export class GameClient {
@@ -13,6 +15,7 @@ export class GameClient {
   private playerAddedHandlers: Array<(sessionId: string) => void> = [];
   private playerRemovedHandlers: Array<(sessionId: string) => void> = [];
   private playerChangedHandlers: Array<(player: NetworkPlayerState) => void> = [];
+  private nextMovementSequence = 1;
 
   constructor(endpoint: string) {
     this.client = new Client(endpoint);
@@ -27,7 +30,12 @@ export class GameClient {
 
     callbacks.onAdd('players', (player, sessionId) => {
       const sessionIdString = sessionId as string;
-      const playerObject = player as { x: number; y: number };
+      const playerObject = player as {
+        mapKey: string;
+        x: number;
+        y: number;
+        lastProcessedInput: number;
+      };
 
       for (const handler of this.playerAddedHandlers) {
         handler(sessionIdString);
@@ -99,15 +107,43 @@ export class GameClient {
     return Array.from(this.room.state.players.keys());
   }
 
-  sendMovement(input: MovementInput): void {
-    this.room?.send('move', input);
+  sendMovement(input: MovementInput): number | undefined {
+    if (!this.room) {
+      return undefined;
+    }
+
+    const sequence = this.nextMovementSequence++;
+
+    this.room.send('move', {
+      sequence,
+      x: input.x,
+      y: input.y,
+    });
+
+    return sequence;
   }
 
-  private notifyPlayerChanged(sessionId: string, player: { x: number; y: number }): void {
+  requestTransition(transitionId: string): void {
+    this.room?.send('transition', {
+      transitionId,
+    });
+  }
+
+  private notifyPlayerChanged(
+    sessionId: string,
+    player: {
+      mapKey: string;
+      x: number;
+      y: number;
+      lastProcessedInput: number;
+    },
+  ): void {
     const state: NetworkPlayerState = {
       sessionId,
+      mapKey: player.mapKey,
       x: player.x,
       y: player.y,
+      lastProcessedInput: player.lastProcessedInput,
     };
 
     for (const handler of this.playerChangedHandlers) {

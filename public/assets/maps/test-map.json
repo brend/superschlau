@@ -127,6 +127,11 @@
                          "name":"targetSpawn",
                          "type":"string",
                          "value":"spawn-from-outside"
+                        }, 
+                        {
+                         "name":"transitionId",
+                         "type":"string",
+                         "value":"outdoor-to-house"
                         }],
                  "rotation":0,
                  "type":"transition",

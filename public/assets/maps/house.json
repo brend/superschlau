@@ -1,120 +1,121 @@
-{
-  "compressionlevel": -1,
-  "height": 10,
-  "infinite": false,
-  "layers": [
-    {
-      "data": [
-        3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 4, 4, 1, 3, 3,
-        1, 1, 1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3, 1, 4, 4, 1, 1, 4, 4, 1, 3, 3, 1,
-        1, 1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 2, 2, 1, 1, 1, 3, 3, 3, 3,
-        3, 2, 2, 3, 3, 3, 3
-      ],
-      "height": 10,
-      "id": 1,
-      "name": "Ground",
-      "opacity": 1,
-      "type": "tilelayer",
-      "visible": true,
-      "width": 10,
-      "x": 0,
-      "y": 0
-    },
-    {
-      "draworder": "topdown",
-      "id": 2,
-      "name": "Objects",
-      "objects": [
+{ "compressionlevel":-1,
+ "height":10,
+ "infinite":false,
+ "layers":[
         {
-          "height": 0,
-          "id": 1,
-          "name": "spawn-from-outside",
-          "opacity": 1,
-          "point": true,
-          "rotation": 0,
-          "type": "",
-          "visible": true,
-          "width": 0,
-          "x": 143.529193353755,
-          "y": 281.355239951731
-        },
+         "data":[3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+            3, 1, 1, 1, 1, 1, 1, 1, 1, 3,
+            3, 1, 1, 1, 1, 1, 4, 4, 1, 3,
+            3, 1, 1, 1, 1, 1, 1, 1, 1, 3,
+            3, 1, 1, 1, 1, 1, 1, 1, 1, 3,
+            3, 1, 4, 4, 1, 1, 4, 4, 1, 3,
+            3, 1, 1, 1, 1, 1, 1, 1, 1, 3,
+            3, 1, 1, 1, 1, 1, 1, 1, 1, 3,
+            3, 1, 1, 1, 2, 2, 1, 1, 1, 3,
+            3, 3, 3, 3, 2, 2, 3, 3, 3, 3],
+         "height":10,
+         "id":1,
+         "name":"Ground",
+         "opacity":1,
+         "type":"tilelayer",
+         "visible":true,
+         "width":10,
+         "x":0,
+         "y":0
+        }, 
         {
-          "height": 28.5157337788917,
-          "id": 2,
-          "name": "door",
-          "opacity": 1,
-          "properties": [
-            {
-              "name": "targetMap",
-              "type": "string",
-              "value": "test-map"
-            },
-            {
-              "name": "targetSpawn",
-              "type": "string",
-              "value": "spawn-from-house"
-            }
-          ],
-          "rotation": 0,
-          "type": "transition",
-          "visible": true,
-          "width": 61.7840898542653,
-          "x": 129.271326464309,
-          "y": 289.909960085399
-        }
-      ],
-      "opacity": 1,
-      "type": "objectgroup",
-      "visible": true,
-      "x": 0,
-      "y": 0
-    }
-  ],
-  "nextlayerid": 3,
-  "nextobjectid": 3,
-  "orientation": "orthogonal",
-  "renderorder": "right-down",
-  "tiledversion": "1.12.2",
-  "tileheight": 32,
-  "tilesets": [
-    {
-      "columns": 2,
-      "firstgid": 1,
-      "image": "..\/tiles\/test-tiles.png",
-      "imageheight": 64,
-      "imagewidth": 64,
-      "margin": 0,
-      "name": "test-tiles",
-      "spacing": 0,
-      "tilecount": 4,
-      "tileheight": 32,
-      "tiles": [
+         "draworder":"topdown",
+         "id":2,
+         "name":"Objects",
+         "objects":[
+                {
+                 "height":0,
+                 "id":1,
+                 "name":"spawn-from-outside",
+                 "opacity":1,
+                 "point":true,
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":143.529193353755,
+                 "y":281.355239951731
+                }, 
+                {
+                 "height":28.5157337788917,
+                 "id":2,
+                 "name":"door",
+                 "opacity":1,
+                 "properties":[
+                        {
+                         "name":"targetMap",
+                         "type":"string",
+                         "value":"test-map"
+                        }, 
+                        {
+                         "name":"targetSpawn",
+                         "type":"string",
+                         "value":"spawn-from-house"
+                        }, 
+                        {
+                         "name":"transitionId",
+                         "type":"string",
+                         "value":"house-to-outdoor"
+                        }],
+                 "rotation":0,
+                 "type":"transition",
+                 "visible":true,
+                 "width":61.7840898542653,
+                 "x":129.271326464309,
+                 "y":289.909960085399
+                }],
+         "opacity":1,
+         "type":"objectgroup",
+         "visible":true,
+         "x":0,
+         "y":0
+        }],
+ "nextlayerid":3,
+ "nextobjectid":3,
+ "orientation":"orthogonal",
+ "renderorder":"right-down",
+ "tiledversion":"1.12.2",
+ "tileheight":32,
+ "tilesets":[
         {
-          "id": 2,
-          "properties": [
-            {
-              "name": "collides",
-              "type": "bool",
-              "value": true
-            }
-          ]
-        },
-        {
-          "id": 3,
-          "properties": [
-            {
-              "name": "collides",
-              "type": "bool",
-              "value": true
-            }
-          ]
-        }
-      ],
-      "tilewidth": 32
-    }
-  ],
-  "tilewidth": 32,
-  "type": "map",
-  "version": "1.10",
-  "width": 10
+         "columns":2,
+         "firstgid":1,
+         "image":"..\/tiles\/test-tiles.png",
+         "imageheight":64,
+         "imagewidth":64,
+         "margin":0,
+         "name":"test-tiles",
+         "spacing":0,
+         "tilecount":4,
+         "tileheight":32,
+         "tiles":[
+                {
+                 "id":2,
+                 "properties":[
+                        {
+                         "name":"collides",
+                         "type":"bool",
+                         "value":true
+                        }]
+                }, 
+                {
+                 "id":3,
+                 "properties":[
+                        {
+                         "name":"collides",
+                         "type":"bool",
+                         "value":true
+                        }]
+                }],
+         "tilewidth":32
+        }],
+ "tilewidth":32,
+ "type":"map",
+ "version":"1.10",
+ "width":10
 }

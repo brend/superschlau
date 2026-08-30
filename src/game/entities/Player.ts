@@ -90,6 +90,33 @@ export class Player {
     this.gameObject.setPosition(x, y);
   }
 
+  applyMovementStep(input: MovementInput, deltaSeconds: number): void {
+    const length = Math.hypot(input.x, input.y);
+
+    this.state.isMoving = length > 0;
+
+    if (!this.state.isMoving) {
+      this.gameObject.body.setVelocity(0);
+      this.setIdleFrame();
+      return;
+    }
+
+    this.updateFacing(input);
+    this.playWalkingAnimation();
+
+    const scale = length > 1 ? 1 / length : 1;
+
+    const x = input.x * scale;
+    const y = input.y * scale;
+
+    this.gameObject.body.setVelocity(0);
+
+    this.gameObject.setPosition(
+      this.gameObject.x + x * MOVE_SPEED * deltaSeconds,
+      this.gameObject.y + y * MOVE_SPEED * deltaSeconds,
+    );
+  }
+
   private setIdleFrame(): void {
     this.gameObject.stop();
 
