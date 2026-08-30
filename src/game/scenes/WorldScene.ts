@@ -43,6 +43,7 @@ export class WorldScene extends Phaser.Scene {
   private unsubscribePlayerAdded?: () => void;
   private unsubscribePlayerRemoved?: () => void;
   private unsubscribePlayerChanged?: () => void;
+  private unsubscribeTransitionRejected?: () => void;
   private elapsedTime = 0;
   private readonly fixedTimeStep = 1000 / 60;
   private pendingMovementInputs: PendingMovementInput[] = [];
@@ -247,6 +248,12 @@ export class WorldScene extends Phaser.Scene {
       }
     });
 
+    this.unsubscribeTransitionRejected = gameClient.onTransitionRejected((transitionId, reason) => {
+      console.log(`[CLIENT] Transition "${transitionId}" rejected by server: "${reason}"`);
+
+      this.transitionInProgress = false;
+    });
+
     for (const state of gameClient.getPlayers()) {
       if (state.sessionId === gameClient.sessionId || state.mapKey !== this.mapKey) {
         continue;
@@ -390,10 +397,12 @@ export class WorldScene extends Phaser.Scene {
     this.unsubscribePlayerAdded?.();
     this.unsubscribePlayerRemoved?.();
     this.unsubscribePlayerChanged?.();
+    this.unsubscribeTransitionRejected?.();
 
     this.unsubscribePlayerAdded = undefined;
     this.unsubscribePlayerRemoved = undefined;
     this.unsubscribePlayerChanged = undefined;
+    this.unsubscribeTransitionRejected = undefined;
 
     this.events.off(Phaser.Scenes.Events.PAUSE, this.handlePause, this);
     this.events.off(Phaser.Scenes.Events.RESUME, this.handleResume, this);

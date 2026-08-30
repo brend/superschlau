@@ -183,7 +183,7 @@ export class GameRoom extends Room {
     const transition = TRANSITIONS.get(request.transitionId);
 
     if (!transition) {
-      console.log(`[SERVER] Rejected unknown transition "${request.transitionId}"`);
+      this.rejectTransition(client, request.transitionId, 'unknown transition');
 
       return;
     }
@@ -197,8 +197,10 @@ export class GameRoom extends Room {
     }
 
     if (player.mapKey !== transition.sourceMap) {
-      console.log(
-        `[SERVER] Rejected transition "${request.transitionId}": player is on "${player.mapKey}", expected "${transition.sourceMap}"`,
+      this.rejectTransition(
+        client,
+        request.transitionId,
+        `player is on "${player.mapKey}", expected "${transition.sourceMap}"`,
       );
 
       return;
@@ -207,8 +209,10 @@ export class GameRoom extends Room {
     this.processMovementInputsThrough(client.sessionId, request.movementSequence);
 
     if (!this.isPointInsideBounds(player.x, player.y, transition.bounds)) {
-      console.log(
-        `[SERVER] Rejected transition "${request.transitionId}": player position (${player.x}, ${player.y}) is outside transition bounds`,
+      this.rejectTransition(
+        client,
+        request.transitionId,
+        `player position (${player.x}, ${player.y}) is outside transition bounds`,
       );
 
       return;
@@ -257,5 +261,14 @@ export class GameRoom extends Room {
     while (queue.length > 0 && queue[0].sequence <= sequence) {
       this.applyMovementInput(player, queue.shift()!);
     }
+  }
+
+  private rejectTransition(client: Client, transitionId: string, reason: string): void {
+    console.log(`[SERVER] Rejected transition "${transitionId}": ${reason}`);
+
+    client.send('transitionRejected', {
+      transitionId,
+      reason,
+    });
   }
 }

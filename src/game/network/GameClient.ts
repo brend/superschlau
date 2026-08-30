@@ -9,12 +9,18 @@ export interface NetworkPlayerState {
   lastProcessedInput: number;
 }
 
+interface TransitionRejectedMessage {
+  transitionId: string;
+  reason: string;
+}
+
 export class GameClient {
   private readonly client: Client;
   private room?: Room;
   private playerAddedHandlers: Array<(sessionId: string) => void> = [];
   private playerRemovedHandlers: Array<(sessionId: string) => void> = [];
   private playerChangedHandlers: Array<(player: NetworkPlayerState) => void> = [];
+  private transitionRejectedHandlers: Array<(transitionId: string, reason: string) => void> = [];
   private nextMovementSequence = 1;
   private lastSentMovementSequence = 0;
 
@@ -55,6 +61,20 @@ export class GameClient {
       }
     });
 
+    this.room.onMessage('transitionRejected', (message: TransitionRejectedMessage) => {
+      if (
+        !message ||
+        typeof message.transitionId !== 'string' ||
+        typeof message.reason !== 'string'
+      ) {
+        return;
+      }
+
+      for (const handler of this.transitionRejectedHandlers) {
+        handler(message.transitionId, message.reason);
+      }
+    });
+
     this.room.onLeave((code) => {
       console.log(`Left room. Code ${code}.`);
     });
@@ -92,6 +112,18 @@ export class GameClient {
 
       if (index >= 0) {
         this.playerChangedHandlers.splice(index, 1);
+      }
+    };
+  }
+
+  onTransitionRejected(handler: (transitionId: string, reason: string) => void): () => void {
+    this.transitionRejectedHandlers.push(handler);
+
+    return () => {
+      const index = this.transitionRejectedHandlers.indexOf(handler);
+
+      if (index >= 0) {
+        this.transitionRejectedHandlers.splice(index, 1);
       }
     };
   }
