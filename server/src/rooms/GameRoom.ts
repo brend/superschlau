@@ -9,10 +9,17 @@ interface MovementInput {
 
 interface TransitionRequest {
   transitionId: string;
+  movementSequence: number;
 }
 
 interface TransitionDefinition {
   sourceMap: string;
+  bounds: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
   targetMap: string;
   targetX: number;
   targetY: number;
@@ -23,18 +30,30 @@ const TRANSITIONS = new Map<string, TransitionDefinition>([
     'outdoor-to-house',
     {
       sourceMap: 'test-map',
+      bounds: {
+        x: 198.531692689484,
+        y: 214.414228104643,
+        width: 38.3827939199669,
+        height: 21.1767138868783,
+      },
       targetMap: 'house',
-      targetX: 143,
-      targetY: 281,
+      targetX: 143.529193353755,
+      targetY: 281.355239951731,
     },
   ],
   [
     'house-to-outdoor',
     {
       sourceMap: 'house',
+      bounds: {
+        x: 129.271326464309,
+        y: 289.909960085399,
+        width: 61.7840898542653,
+        height: 28.5157337788917,
+      },
       targetMap: 'test-map',
-      targetX: 214,
-      targetY: 250,
+      targetX: 214.414228104643,
+      targetY: 250.14993278875,
     },
   ],
 ]);
@@ -145,17 +164,19 @@ export class GameRoom extends Room {
         continue;
       }
 
-      player.x += input.x * MOVE_SPEED * deltaSeconds;
-      player.y += input.y * MOVE_SPEED * deltaSeconds;
-
-      player.lastProcessedInput = input.sequence;
+      this.applyMovementInput(player, input);
     }
   }
 
   private handleTransitionRequest(client: Client, request: TransitionRequest): void {
     console.log(`[SERVER] Transition request from ${client.sessionId}: "${request?.transitionId}"`);
 
-    if (!request || typeof request.transitionId !== 'string') {
+    if (
+      !request ||
+      typeof request.transitionId !== 'string' ||
+      !Number.isInteger(request.movementSequence) ||
+      request.movementSequence < 0
+    ) {
       return;
     }
 
@@ -183,6 +204,16 @@ export class GameRoom extends Room {
       return;
     }
 
+    this.processMovementInputsThrough(client.sessionId, request.movementSequence);
+
+    if (!this.isPointInsideBounds(player.x, player.y, transition.bounds)) {
+      console.log(
+        `[SERVER] Rejected transition "${request.transitionId}": player position (${player.x}, ${player.y}) is outside transition bounds`,
+      );
+
+      return;
+    }
+
     console.log(
       `[SERVER] Accepted transition "${request.transitionId}": ${player.mapKey} -> ${transition.targetMap}, position (${transition.targetX}, ${transition.targetY})`,
     );
@@ -192,5 +223,39 @@ export class GameRoom extends Room {
     player.y = transition.targetY;
 
     this.movementInputs.set(client.sessionId, []);
+  }
+
+  private isPointInsideBounds(
+    x: number,
+    y: number,
+    bounds: TransitionDefinition['bounds'],
+  ): boolean {
+    return (
+      x >= bounds.x &&
+      x <= bounds.x + bounds.width &&
+      y >= bounds.y &&
+      y <= bounds.y + bounds.height
+    );
+  }
+
+  private applyMovementInput(player: PlayerState, input: MovementInput): void {
+    const deltaSeconds = FIXED_TIME_STEP / 1000;
+
+    player.x += input.x * MOVE_SPEED * deltaSeconds;
+    player.y += input.y * MOVE_SPEED * deltaSeconds;
+    player.lastProcessedInput = input.sequence;
+  }
+
+  private processMovementInputsThrough(sessionId: string, sequence: number): void {
+    const player = this.state.players.get(sessionId);
+    const queue = this.movementInputs.get(sessionId);
+
+    if (!player || !queue) {
+      return;
+    }
+
+    while (queue.length > 0 && queue[0].sequence <= sequence) {
+      this.applyMovementInput(player, queue.shift()!);
+    }
   }
 }

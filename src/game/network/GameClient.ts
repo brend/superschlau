@@ -16,6 +16,7 @@ export class GameClient {
   private playerRemovedHandlers: Array<(sessionId: string) => void> = [];
   private playerChangedHandlers: Array<(player: NetworkPlayerState) => void> = [];
   private nextMovementSequence = 1;
+  private lastSentMovementSequence = 0;
 
   constructor(endpoint: string) {
     this.client = new Client(endpoint);
@@ -126,6 +127,8 @@ export class GameClient {
 
     const sequence = this.nextMovementSequence++;
 
+    this.lastSentMovementSequence = sequence;
+
     this.room.send('move', {
       sequence,
       x: input.x,
@@ -138,6 +141,7 @@ export class GameClient {
   requestTransition(transitionId: string): void {
     this.room?.send('transition', {
       transitionId,
+      movementSequence: this.lastSentMovementSequence,
     });
   }
 
