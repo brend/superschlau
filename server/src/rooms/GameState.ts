@@ -15,6 +15,9 @@ export class PlayerState extends Schema {
 
   @type('number')
   lastProcessedInput = 0;
+
+  @type('string')
+  facing = 'down';
 }
 
 export class GameState extends Schema {

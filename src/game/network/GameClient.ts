@@ -1,11 +1,13 @@
 import { Callbacks, Client, type Room } from '@colyseus/sdk';
 import type { MovementInput } from '../input/MovementInput';
+import type { FacingDirection } from '../entities/PlayerState';
 
 export interface NetworkPlayerState {
   sessionId: string;
   mapKey: string;
   x: number;
   y: number;
+  facing: FacingDirection;
   lastProcessedInput: number;
 }
 
@@ -41,6 +43,7 @@ export class GameClient {
         mapKey: string;
         x: number;
         y: number;
+        facing: FacingDirection;
         lastProcessedInput: number;
       };
 
@@ -145,6 +148,7 @@ export class GameClient {
         mapKey: player.mapKey,
         x: player.x,
         y: player.y,
+        facing: player.facing,
         lastProcessedInput: player.lastProcessedInput,
       });
     }
@@ -183,6 +187,7 @@ export class GameClient {
       mapKey: string;
       x: number;
       y: number;
+      facing: FacingDirection;
       lastProcessedInput: number;
     },
   ): void {
@@ -191,6 +196,7 @@ export class GameClient {
       mapKey: player.mapKey,
       x: player.x,
       y: player.y,
+      facing: player.facing,
       lastProcessedInput: player.lastProcessedInput,
     };
 

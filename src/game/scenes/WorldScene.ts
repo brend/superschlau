@@ -10,6 +10,7 @@ import { createPlayerAnimations } from '../animations/PlayerAnimations';
 import { GameState } from '../gameplay/GameState';
 import { gameClient } from '../network/network';
 import type { NetworkPlayerState } from '../network/GameClient';
+import type { FacingDirection } from '../entities/PlayerState';
 
 interface WorldSceneData {
   mapKey?: string;
@@ -249,6 +250,7 @@ export class WorldScene extends Phaser.Scene {
       if (remotePlayer) {
         remotePlayer.targetX = state.x;
         remotePlayer.targetY = state.y;
+        this.setRemotePlayerFacing(remotePlayer, state.facing);
       }
     });
 
@@ -271,6 +273,7 @@ export class WorldScene extends Phaser.Scene {
         remotePlayer.gameObject.setPosition(state.x, state.y);
         remotePlayer.targetX = state.x;
         remotePlayer.targetY = state.y;
+        this.setRemotePlayerFacing(remotePlayer, state.facing);
       }
     }
 
@@ -458,5 +461,16 @@ export class WorldScene extends Phaser.Scene {
     }
 
     this.physics.world.collide(this.player.physicsObject, this.groundLayer);
+  }
+
+  private setRemotePlayerFacing(remotePlayer: RemotePlayerView, facing: FacingDirection): void {
+    const idleFrames: Record<FacingDirection, number> = {
+      down: 0,
+      left: 3,
+      right: 6,
+      up: 9,
+    };
+
+    remotePlayer.gameObject.setFrame(idleFrames[facing]);
   }
 }

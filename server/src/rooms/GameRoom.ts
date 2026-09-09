@@ -230,6 +230,14 @@ export class GameRoom extends Room {
   }
 
   private applyMovementInput(player: PlayerState, input: MovementInput): void {
+    if (input.x !== 0 || input.y !== 0) {
+      if (Math.abs(input.x) > Math.abs(input.y)) {
+        player.facing = input.x < 0 ? 'left' : 'right';
+      } else {
+        player.facing = input.y < 0 ? 'up' : 'down';
+      }
+    }
+
     const deltaSeconds = FIXED_TIME_STEP / 1000;
     const deltaX = input.x * MOVE_SPEED * deltaSeconds;
     const deltaY = input.y * MOVE_SPEED * deltaSeconds;
