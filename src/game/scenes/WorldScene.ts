@@ -230,7 +230,7 @@ export class WorldScene extends Phaser.Scene {
       }
 
       if (state.mapKey !== this.mapKey) {
-        console.log(`[CLIENT] Player created on "${this.mapKey}" at (${playerX}, ${playerY})`);
+        console.log(`[CLIENT] Player removed on "${this.mapKey}" at (${playerX}, ${playerY})`);
 
         this.removeRemotePlayer(state.sessionId);
         return;
