@@ -19,7 +19,7 @@ interface WorldSceneData {
 }
 
 interface RemotePlayerView {
-  gameObject: Phaser.GameObjects.Rectangle;
+  gameObject: Phaser.GameObjects.Sprite;
   targetX: number;
   targetY: number;
 }
@@ -50,6 +50,7 @@ export class WorldScene extends Phaser.Scene {
   private authoritativeX?: number;
   private authoritativeY?: number;
   private transitionInProgress = false;
+  private groundLayer?: Phaser.Tilemaps.TilemapLayer;
 
   constructor() {
     super('WorldScene');
@@ -85,6 +86,7 @@ export class WorldScene extends Phaser.Scene {
     this.pendingMovementInputs.length = 0;
     this.remotePlayers.clear();
     this.inputController = undefined;
+    this.groundLayer = undefined;
     this.isDialogueOpen = false;
     this.elapsedTime = 0;
     this.transitionInProgress = false;
@@ -133,6 +135,8 @@ export class WorldScene extends Phaser.Scene {
     if (!ground) {
       throw new Error('Ground layer could not be created.');
     }
+
+    this.groundLayer = ground as Phaser.Tilemaps.TilemapLayer;
 
     this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
 
@@ -366,6 +370,7 @@ export class WorldScene extends Phaser.Scene {
     }
 
     this.player.applyMovementStep(movement, this.fixedTimeStep / 1000);
+    this.resolvePredictedCollision();
   }
 
   private openDialogue(message: string): void {
@@ -413,13 +418,7 @@ export class WorldScene extends Phaser.Scene {
       return;
     }
 
-    const gameObject = this.add.rectangle(
-      360 + 30 * this.remotePlayers.size,
-      240,
-      24,
-      24,
-      0xff00ff,
-    );
+    const gameObject = this.add.sprite(360 + 30 * this.remotePlayers.size, 240, 'player', 0);
 
     this.remotePlayers.set(sessionId, {
       gameObject,
@@ -449,6 +448,15 @@ export class WorldScene extends Phaser.Scene {
 
     for (const input of this.pendingMovementInputs) {
       this.player.applyMovementStep(input, this.fixedTimeStep / 1000);
+      this.resolvePredictedCollision();
     }
+  }
+
+  private resolvePredictedCollision(): void {
+    if (!this.groundLayer) {
+      return;
+    }
+
+    this.physics.world.collide(this.player.physicsObject, this.groundLayer);
   }
 }

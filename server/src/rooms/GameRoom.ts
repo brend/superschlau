@@ -121,6 +121,12 @@ export class GameRoom extends Room {
       return;
     }
 
+    const player = this.state.players.get(client.sessionId);
+
+    if (!player || input.sequence <= player.lastProcessedInput) {
+      return;
+    }
+
     const length = Math.hypot(input.x, input.y);
     const scale = length > 1 ? 1 / length : 1;
 
