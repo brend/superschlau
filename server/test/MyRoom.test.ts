@@ -22,7 +22,9 @@ describe('GameRoom', () => {
     const playerId = '12345678-1234-4123-8123-123456789abc';
     const displayName = 'Guest-123456';
 
-    const room = await colyseus.createRoom<GameRoom>('game', {});
+    const room = await colyseus.createRoom<GameRoom>('game', {
+      databasePath: ':memory:',
+    });
     const client = await colyseus.connectTo(room, {
       playerId,
       displayName,

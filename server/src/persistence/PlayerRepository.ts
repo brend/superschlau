@@ -1,3 +1,5 @@
+import { mkdirSync } from 'node:fs';
+import { dirname } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 
 export interface PersistedPlayer {
@@ -13,6 +15,10 @@ export class PlayerRepository {
   private readonly database: DatabaseSync;
 
   constructor(databasePath: string) {
+    if (databasePath !== ':memory:') {
+      mkdirSync(dirname(databasePath), { recursive: true });
+    }
+
     this.database = new DatabaseSync(databasePath, {
       timeout: 5_000,
     });

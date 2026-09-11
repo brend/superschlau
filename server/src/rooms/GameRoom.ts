@@ -1,4 +1,5 @@
 import { Room, Client } from 'colyseus';
+import { PlayerRepository } from '../persistence/PlayerRepository.js';
 import { GameState, PlayerState } from './GameState.js';
 import {
   loadMapBounds,
@@ -26,6 +27,10 @@ interface JoinOptions {
   displayName?: unknown;
 }
 
+interface GameRoomOptions {
+  databasePath?: string;
+}
+
 const TICK_RATE = 60;
 const FIXED_TIME_STEP = 1000 / TICK_RATE;
 const MOVE_SPEED = 120;
@@ -42,12 +47,15 @@ const COLLISION_MAPS = loadCollisionMaps();
 
 export class GameRoom extends Room {
   private readonly movementInputs = new Map<string, MovementInput[]>();
+  private playerRepository!: PlayerRepository;
 
   maxClients = 8;
 
   state = new GameState();
 
-  onCreate(): void {
+  onCreate(options: GameRoomOptions = {}): void {
+    this.playerRepository = new PlayerRepository(options.databasePath ?? 'data/players.sqlite');
+
     this.onMessage('move', (client, message: MovementInput) => {
       this.handleMovementInput(client, message);
     });
@@ -87,6 +95,16 @@ export class GameRoom extends Room {
     player.playerId = normalizePlayerId(options.playerId, client.sessionId);
     player.displayName = normalizeDisplayName(options.displayName, client.sessionId);
 
+    const savedPlayer = this.playerRepository.findById(player.playerId);
+
+    if (savedPlayer) {
+      player.displayName = savedPlayer.displayName;
+      player.mapKey = savedPlayer.mapKey;
+      player.x = savedPlayer.x;
+      player.y = savedPlayer.y;
+      player.facing = savedPlayer.facing;
+    }
+
     this.state.players.set(client.sessionId, player);
 
     this.movementInputs.set(client.sessionId, []);
@@ -124,6 +142,8 @@ export class GameRoom extends Room {
   }
 
   onDispose(): void {
+    this.playerRepository.close();
+
     console.log(`Room disposed: ${this.roomId}`);
   }
 
