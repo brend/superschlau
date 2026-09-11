@@ -21,6 +21,7 @@ interface WorldSceneData {
 
 interface RemotePlayerView {
   gameObject: Phaser.GameObjects.Sprite;
+  nameLabel: Phaser.GameObjects.Text;
   targetX: number;
   targetY: number;
 }
@@ -243,13 +244,14 @@ export class WorldScene extends Phaser.Scene {
 
       console.log(`[CLIENT] Remote ${state.sessionId} is on local map "${this.mapKey}"`);
 
-      this.addRemotePlayer(state.sessionId);
+      this.addRemotePlayer(state.sessionId, state.displayName);
 
       const remotePlayer = this.remotePlayers.get(state.sessionId);
 
       if (remotePlayer) {
         remotePlayer.targetX = state.x;
         remotePlayer.targetY = state.y;
+        remotePlayer.nameLabel.setText(state.displayName);
         this.updateRemotePlayerAnimation(remotePlayer, state.facing, state.isMoving);
       }
     });
@@ -265,12 +267,16 @@ export class WorldScene extends Phaser.Scene {
         continue;
       }
 
-      this.addRemotePlayer(state.sessionId);
+      this.addRemotePlayer(state.sessionId, state.displayName);
 
       const remotePlayer = this.remotePlayers.get(state.sessionId);
 
       if (remotePlayer) {
         remotePlayer.gameObject.setPosition(state.x, state.y);
+        remotePlayer.nameLabel.setPosition(
+          remotePlayer.gameObject.x,
+          remotePlayer.gameObject.y - 18,
+        );
         remotePlayer.targetX = state.x;
         remotePlayer.targetY = state.y;
         this.updateRemotePlayerAnimation(remotePlayer, state.facing, state.isMoving);
@@ -306,6 +312,8 @@ export class WorldScene extends Phaser.Scene {
         remotePlayer.targetY,
         0.2,
       );
+
+      remotePlayer.nameLabel.setPosition(remotePlayer.gameObject.x, remotePlayer.gameObject.y - 18);
     }
 
     this.elapsedTime += delta;
@@ -416,15 +424,27 @@ export class WorldScene extends Phaser.Scene {
     this.events.off(Phaser.Scenes.Events.RESUME, this.handleResume, this);
   }
 
-  private addRemotePlayer(sessionId: string): void {
+  private addRemotePlayer(sessionId: string, displayName: string = 'Guest'): void {
     if (this.remotePlayers.has(sessionId)) {
       return;
     }
 
     const gameObject = this.add.sprite(360 + 30 * this.remotePlayers.size, 240, 'player', 0);
 
+    const nameLabel = this.add
+      .text(gameObject.x, gameObject.y - 18, displayName, {
+        fontFamily: 'sans-serif',
+        fontSize: '10px',
+        color: '#ffffff',
+        stroke: '#000000',
+        strokeThickness: 3,
+      })
+      .setOrigin(0.5, 1)
+      .setDepth(10);
+
     this.remotePlayers.set(sessionId, {
       gameObject,
+      nameLabel,
       targetX: gameObject.x,
       targetY: gameObject.y,
     });
@@ -438,6 +458,7 @@ export class WorldScene extends Phaser.Scene {
     }
 
     player.gameObject.destroy();
+    player.nameLabel.destroy();
 
     this.remotePlayers.delete(sessionId);
   }
