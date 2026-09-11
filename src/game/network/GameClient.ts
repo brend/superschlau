@@ -9,6 +9,7 @@ export interface NetworkPlayerState {
   y: number;
   facing: FacingDirection;
   lastProcessedInput: number;
+  isMoving: boolean;
 }
 
 interface TransitionRejectedMessage {
@@ -45,6 +46,7 @@ export class GameClient {
         y: number;
         facing: FacingDirection;
         lastProcessedInput: number;
+        isMoving: boolean;
       };
 
       for (const handler of this.playerAddedHandlers) {
@@ -150,6 +152,7 @@ export class GameClient {
         y: player.y,
         facing: player.facing,
         lastProcessedInput: player.lastProcessedInput,
+        isMoving: player.isMoving,
       });
     }
 
@@ -189,6 +192,7 @@ export class GameClient {
       y: number;
       facing: FacingDirection;
       lastProcessedInput: number;
+      isMoving: boolean;
     },
   ): void {
     const state: NetworkPlayerState = {
@@ -198,6 +202,7 @@ export class GameClient {
       y: player.y,
       facing: player.facing,
       lastProcessedInput: player.lastProcessedInput,
+      isMoving: player.isMoving,
     };
 
     for (const handler of this.playerChangedHandlers) {

@@ -250,7 +250,7 @@ export class WorldScene extends Phaser.Scene {
       if (remotePlayer) {
         remotePlayer.targetX = state.x;
         remotePlayer.targetY = state.y;
-        this.setRemotePlayerFacing(remotePlayer, state.facing);
+        this.updateRemotePlayerAnimation(remotePlayer, state.facing, state.isMoving);
       }
     });
 
@@ -273,7 +273,7 @@ export class WorldScene extends Phaser.Scene {
         remotePlayer.gameObject.setPosition(state.x, state.y);
         remotePlayer.targetX = state.x;
         remotePlayer.targetY = state.y;
-        this.setRemotePlayerFacing(remotePlayer, state.facing);
+        this.updateRemotePlayerAnimation(remotePlayer, state.facing, state.isMoving);
       }
     }
 
@@ -463,7 +463,16 @@ export class WorldScene extends Phaser.Scene {
     this.physics.world.collide(this.player.physicsObject, this.groundLayer);
   }
 
-  private setRemotePlayerFacing(remotePlayer: RemotePlayerView, facing: FacingDirection): void {
+  private updateRemotePlayerAnimation(
+    remotePlayer: RemotePlayerView,
+    facing: FacingDirection,
+    isMoving: boolean,
+  ): void {
+    if (isMoving) {
+      remotePlayer.gameObject.play(`player-walk-${facing}`, true);
+      return;
+    }
+
     const idleFrames: Record<FacingDirection, number> = {
       down: 0,
       left: 3,
@@ -471,6 +480,7 @@ export class WorldScene extends Phaser.Scene {
       up: 9,
     };
 
+    remotePlayer.gameObject.stop();
     remotePlayer.gameObject.setFrame(idleFrames[facing]);
   }
 }

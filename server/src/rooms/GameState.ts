@@ -18,6 +18,9 @@ export class PlayerState extends Schema {
 
   @type('string')
   facing = 'down';
+
+  @type('boolean')
+  isMoving = false;
 }
 
 export class GameState extends Schema {
