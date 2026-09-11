@@ -21,6 +21,12 @@ export class PlayerState extends Schema {
 
   @type('boolean')
   isMoving = false;
+
+  @type('string')
+  playerId = '';
+
+  @type('string')
+  displayName = '';
 }
 
 export class GameState extends Schema {

@@ -21,6 +21,11 @@ interface TransitionRequest {
   movementSequence: number;
 }
 
+interface JoinOptions {
+  playerId?: unknown;
+  displayName?: unknown;
+}
+
 const TICK_RATE = 60;
 const FIXED_TIME_STEP = 1000 / TICK_RATE;
 const MOVE_SPEED = 120;
@@ -75,16 +80,20 @@ export class GameRoom extends Room {
     }
   }
 
-  onJoin(client: Client): void {
+  onJoin(client: Client, options: JoinOptions = {}): void {
     const player = new PlayerState();
 
     player.id = client.sessionId;
+    player.playerId = normalizePlayerId(options.playerId, client.sessionId);
+    player.displayName = normalizeDisplayName(options.displayName, client.sessionId);
 
     this.state.players.set(client.sessionId, player);
 
     this.movementInputs.set(client.sessionId, []);
 
-    console.log(`Client joined: ${client.sessionId}`);
+    console.log(
+      `Client joined: ${client.sessionId} as "${player.displayName}" (${player.playerId})`,
+    );
   }
 
   onDrop(client: Client, code?: number): void {
@@ -348,4 +357,28 @@ function clamp(value: number, min: number, max: number): number {
 
 function countCollidingTiles(collisionMap: CollisionMap): number {
   return collisionMap.collides.filter(Boolean).length;
+}
+
+function normalizePlayerId(value: unknown, fallback: string): string {
+  if (
+    typeof value === 'string' &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)
+  ) {
+    return value;
+  }
+
+  return fallback;
+}
+
+function normalizeDisplayName(value: unknown, fallback: string): string {
+  if (typeof value !== 'string') {
+    return `Guest-${fallback.slice(0, 6)}`;
+  }
+
+  const name = value
+    .replace(/[\u0000-\u001f\u007f]/g, '')
+    .trim()
+    .slice(0, 24);
+
+  return name || `Guest-${fallback.slice(0, 6)}`;
 }

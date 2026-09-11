@@ -10,6 +10,13 @@ export interface NetworkPlayerState {
   facing: FacingDirection;
   lastProcessedInput: number;
   isMoving: boolean;
+  playerId: string;
+  displayName: string;
+}
+
+interface ClientIdentity {
+  playerId: string;
+  displayName: string;
 }
 
 interface TransitionRejectedMessage {
@@ -31,8 +38,8 @@ export class GameClient {
     this.client = new Client(endpoint);
   }
 
-  async connect(): Promise<void> {
-    this.room = await this.client.joinOrCreate('game');
+  async connect(identity: ClientIdentity): Promise<void> {
+    this.room = await this.client.joinOrCreate('game', identity);
 
     console.log(`Joined room ${this.room.roomId} as ${this.room.sessionId}`);
 
@@ -47,6 +54,8 @@ export class GameClient {
         facing: FacingDirection;
         lastProcessedInput: number;
         isMoving: boolean;
+        playerId: string;
+        displayName: string;
       };
 
       for (const handler of this.playerAddedHandlers) {
@@ -153,6 +162,8 @@ export class GameClient {
         facing: player.facing,
         lastProcessedInput: player.lastProcessedInput,
         isMoving: player.isMoving,
+        playerId: player.playerId,
+        displayName: player.displayName,
       });
     }
 
@@ -193,6 +204,8 @@ export class GameClient {
       facing: FacingDirection;
       lastProcessedInput: number;
       isMoving: boolean;
+      playerId: string;
+      displayName: string;
     },
   ): void {
     const state: NetworkPlayerState = {
@@ -203,6 +216,8 @@ export class GameClient {
       facing: player.facing,
       lastProcessedInput: player.lastProcessedInput,
       isMoving: player.isMoving,
+      playerId: player.playerId,
+      displayName: player.displayName,
     };
 
     for (const handler of this.playerChangedHandlers) {
