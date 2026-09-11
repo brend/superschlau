@@ -2,6 +2,8 @@ import { Callbacks, Client, type Room } from '@colyseus/sdk';
 import type { MovementInput } from '../input/MovementInput';
 import type { FacingDirection } from '../entities/PlayerState';
 
+const RECONNECTION_TOKEN_STORAGE_KEY = 'superschlau-reconnection-token';
+
 export interface NetworkPlayerState {
   sessionId: string;
   mapKey: string;
@@ -39,11 +41,32 @@ export class GameClient {
   }
 
   async connect(identity: ClientIdentity): Promise<void> {
-    this.room = await this.client.joinOrCreate('game', identity);
+    let room: Room | undefined;
 
-    console.log(`Joined room ${this.room.roomId} as ${this.room.sessionId}`);
+    const reconnectionToken = localStorage.getItem(RECONNECTION_TOKEN_STORAGE_KEY);
 
-    const callbacks = Callbacks.get(this.room);
+    if (reconnectionToken) {
+      try {
+        room = await this.client.reconnect(reconnectionToken);
+
+        console.log(`Reconnected to room ${room.roomId} as ${room.sessionId}`);
+      } catch (error) {
+        console.warn('Stored reconnection token was rejected:', error);
+        localStorage.removeItem(RECONNECTION_TOKEN_STORAGE_KEY);
+      }
+    }
+
+    if (!room) {
+      room = await this.client.joinOrCreate('game', identity);
+
+      console.log(`Joined room ${room.roomId} as ${room.sessionId}`);
+    }
+
+    this.room = room;
+
+    this.storeReconnectionToken(room);
+
+    const callbacks = Callbacks.get(room);
 
     callbacks.onAdd('players', (player, sessionId) => {
       const sessionIdString = sessionId as string;
@@ -57,6 +80,17 @@ export class GameClient {
         playerId: string;
         displayName: string;
       };
+
+      if (sessionIdString === room.sessionId) {
+        this.lastSentMovementSequence = Math.max(
+          this.lastSentMovementSequence,
+          playerObject.lastProcessedInput,
+        );
+        this.nextMovementSequence = Math.max(
+          this.nextMovementSequence,
+          playerObject.lastProcessedInput + 1,
+        );
+      }
 
       for (const handler of this.playerAddedHandlers) {
         handler(sessionIdString);
@@ -75,7 +109,7 @@ export class GameClient {
       }
     });
 
-    this.room.onMessage('transitionRejected', (message: TransitionRejectedMessage) => {
+    room.onMessage('transitionRejected', (message: TransitionRejectedMessage) => {
       if (
         !message ||
         typeof message.transitionId !== 'string' ||
@@ -89,7 +123,21 @@ export class GameClient {
       }
     });
 
-    this.room.onLeave((code) => {
+    room.onReconnect(() => {
+      this.storeReconnectionToken(room);
+
+      console.log(`Reconnected to room ${room.roomId} as ${room.sessionId}`);
+    });
+
+    room.onLeave((code) => {
+      if (localStorage.getItem(RECONNECTION_TOKEN_STORAGE_KEY) === room.reconnectionToken) {
+        localStorage.removeItem(RECONNECTION_TOKEN_STORAGE_KEY);
+      }
+
+      if (this.room === room) {
+        this.room = undefined;
+      }
+
       console.log(`Left room. Code ${code}.`);
     });
   }
@@ -223,5 +271,9 @@ export class GameClient {
     for (const handler of this.playerChangedHandlers) {
       handler(state);
     }
+  }
+
+  private storeReconnectionToken(room: Room): void {
+    localStorage.setItem(RECONNECTION_TOKEN_STORAGE_KEY, room.reconnectionToken);
   }
 }
