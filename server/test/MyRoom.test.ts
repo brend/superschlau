@@ -1,31 +1,46 @@
-import assert from "assert";
-import { ColyseusTestServer, boot } from "@colyseus/testing";
+import assert from 'node:assert/strict';
+import { ColyseusTestServer, boot } from '@colyseus/testing';
+import appConfig from '../src/app.config.js';
+import type { GameRoom } from '../src/rooms/GameRoom.js';
 
-// import your "app.config.ts" file here.
-import appConfig from "../src/app.config.js";
-import { MyRoomState } from "../src/rooms/schema/MyRoomState.js";
-
-describe("testing your Colyseus app", () => {
+describe('GameRoom', () => {
   let colyseus: ColyseusTestServer<typeof appConfig>;
 
-  before(async () => colyseus = await boot(appConfig));
-  after(async () => colyseus.shutdown());
+  before(async () => {
+    colyseus = await boot(appConfig);
+  });
 
-  beforeEach(async () => await colyseus.cleanup());
+  after(async () => {
+    await colyseus.shutdown();
+  });
 
-  it("connecting into a room", async () => {
-    // `room` is the server-side Room instance reference.
-    const room = await colyseus.createRoom<MyRoomState>("my_room", {});
+  beforeEach(async () => {
+    await colyseus.cleanup();
+  });
 
-    // `client1` is the client-side `Room` instance reference (same as JavaScript SDK)
-    const client1 = await colyseus.connectTo(room);
+  it('creates a player with the supplied guest identity', async () => {
+    const playerId = '12345678-1234-4123-8123-123456789abc';
+    const displayName = 'Guest-123456';
 
-    // make your assertions
-    assert.strictEqual(client1.sessionId, room.clients[0].sessionId);
+    const room = await colyseus.createRoom<GameRoom>('game', {});
+    const client = await colyseus.connectTo(room, {
+      playerId,
+      displayName,
+    });
 
-    // wait for state sync
-    await room.waitForNextPatch();
+    const player = room.state.players.get(client.sessionId);
 
-    assert.deepStrictEqual({ mySynchronizedProperty: "Hello world" }, client1.state.toJSON());
+    assert.ok(player);
+    assert.equal(player.id, client.sessionId);
+    assert.equal(player.playerId, playerId);
+    assert.equal(player.displayName, displayName);
+    assert.equal(player.mapKey, 'test-map');
+    assert.equal(player.x, 320);
+    assert.equal(player.y, 240);
+    assert.equal(player.facing, 'down');
+    assert.equal(player.isMoving, false);
+    assert.equal(player.lastProcessedInput, 0);
+
+    await client.leave();
   });
 });
