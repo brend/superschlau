@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import type { MovementInput } from '../input/MovementInput';
-import type { PlayerState } from './PlayerState';
+import type { FacingDirection, PlayerState } from './PlayerState';
 
 const MOVE_SPEED = 120;
 
@@ -88,6 +88,14 @@ export class Player {
 
   setPosition(x: number, y: number): void {
     this.gameObject.setPosition(x, y);
+  }
+
+  setFacing(facing: FacingDirection): void {
+    this.state.facing = facing;
+
+    if (!this.state.isMoving) {
+      this.setIdleFrame();
+    }
   }
 
   applyMovementStep(input: MovementInput, deltaSeconds: number): void {

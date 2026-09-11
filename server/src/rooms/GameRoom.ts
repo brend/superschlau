@@ -135,6 +135,16 @@ export class GameRoom extends Room {
   }
 
   onLeave(client: Client): void {
+    const player = this.state.players.get(client.sessionId);
+
+    if (player) {
+      try {
+        this.savePlayer(player);
+      } catch (error) {
+        console.error(`Failed to save player ${player.playerId}:`, error);
+      }
+    }
+
     this.state.players.delete(client.sessionId);
     this.movementInputs.delete(client.sessionId);
 
@@ -183,6 +193,17 @@ export class GameRoom extends Room {
       sequence: input.sequence,
       x: input.x * scale,
       y: input.y * scale,
+    });
+  }
+
+  private savePlayer(player: PlayerState): void {
+    this.playerRepository.save({
+      playerId: player.playerId,
+      displayName: player.displayName,
+      mapKey: player.mapKey,
+      x: player.x,
+      y: player.y,
+      facing: player.facing,
     });
   }
 

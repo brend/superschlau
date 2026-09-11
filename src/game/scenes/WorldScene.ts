@@ -469,6 +469,7 @@ export class WorldScene extends Phaser.Scene {
     );
 
     this.player.setPosition(state.x, state.y);
+    this.player.setFacing(state.facing);
 
     for (const input of this.pendingMovementInputs) {
       this.player.applyMovementStep(input, this.fixedTimeStep / 1000);

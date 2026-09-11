@@ -45,4 +45,48 @@ describe('GameRoom', () => {
 
     await client.leave();
   });
+
+  it('restores a player after leaving and rejoining', async () => {
+    const room = await colyseus.createRoom<GameRoom>('game', {
+      databasePath: ':memory:',
+    });
+
+    const observer = await colyseus.connectTo(room, {
+      playerId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+      displayName: 'Observer',
+    });
+
+    const firstClient = await colyseus.connectTo(room, {
+      playerId: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+      displayName: 'Original Name',
+    });
+
+    const firstPlayer = room.state.players.get(firstClient.sessionId);
+
+    assert.ok(firstPlayer);
+
+    firstPlayer.mapKey = 'house';
+    firstPlayer.x = 144;
+    firstPlayer.y = 176;
+    firstPlayer.facing = 'up';
+
+    await firstClient.leave();
+
+    const returningClient = await colyseus.connectTo(room, {
+      playerId: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+      displayName: 'Replacement Name',
+    });
+
+    const restoredPlayer = room.state.players.get(returningClient.sessionId);
+
+    assert.ok(restoredPlayer);
+    assert.equal(restoredPlayer.displayName, 'Original Name');
+    assert.equal(restoredPlayer.mapKey, 'house');
+    assert.equal(restoredPlayer.x, 144);
+    assert.equal(restoredPlayer.y, 176);
+    assert.equal(restoredPlayer.facing, 'up');
+
+    await returningClient.leave();
+    await observer.leave();
+  });
 });
