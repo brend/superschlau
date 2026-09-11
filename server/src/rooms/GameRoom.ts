@@ -87,6 +87,26 @@ export class GameRoom extends Room {
     console.log(`Client joined: ${client.sessionId}`);
   }
 
+  onDrop(client: Client, code?: number): void {
+    const player = this.state.players.get(client.sessionId);
+
+    if (player) {
+      player.isMoving = false;
+    }
+
+    this.movementInputs.set(client.sessionId, []);
+
+    this.allowReconnection(client, 10);
+
+    console.log(`Client dropped: ${client.sessionId}. Code ${code}.`);
+  }
+
+  onReconnect(client: Client<any>): void {
+    this.movementInputs.set(client.sessionId, []);
+
+    console.log(`Client reconnected: ${client.sessionId}`);
+  }
+
   onLeave(client: Client): void {
     this.state.players.delete(client.sessionId);
     this.movementInputs.delete(client.sessionId);
