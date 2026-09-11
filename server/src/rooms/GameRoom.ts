@@ -34,6 +34,7 @@ interface GameRoomOptions {
 const TICK_RATE = 60;
 const FIXED_TIME_STEP = 1000 / TICK_RATE;
 const MOVE_SPEED = 120;
+const AUTOSAVE_INTERVAL = 5_000;
 
 const PLAYER_BODY_OFFSET_X = 6;
 const PLAYER_BODY_OFFSET_Y = 14;
@@ -47,6 +48,7 @@ const COLLISION_MAPS = loadCollisionMaps();
 
 export class GameRoom extends Room {
   private readonly movementInputs = new Map<string, MovementInput[]>();
+  private readonly dirtyPlayerSessionIds = new Set<string>();
   private playerRepository!: PlayerRepository;
 
   maxClients = 8;
@@ -65,13 +67,20 @@ export class GameRoom extends Room {
     });
 
     let elapsedTime = 0;
+    let autosaveElapsedTime = 0;
 
     this.setSimulationInterval((deltaTime: number) => {
       elapsedTime += deltaTime;
+      autosaveElapsedTime += deltaTime;
 
       while (elapsedTime >= FIXED_TIME_STEP) {
         elapsedTime -= FIXED_TIME_STEP;
         this.fixedTick();
+      }
+
+      if (autosaveElapsedTime >= AUTOSAVE_INTERVAL) {
+        autosaveElapsedTime %= AUTOSAVE_INTERVAL;
+        this.saveDirtyPlayers();
       }
     });
 
@@ -138,20 +147,18 @@ export class GameRoom extends Room {
     const player = this.state.players.get(client.sessionId);
 
     if (player) {
-      try {
-        this.savePlayer(player);
-      } catch (error) {
-        console.error(`Failed to save player ${player.playerId}:`, error);
-      }
+      this.savePlayer(player);
     }
 
     this.state.players.delete(client.sessionId);
     this.movementInputs.delete(client.sessionId);
+    this.dirtyPlayerSessionIds.delete(client.sessionId);
 
     console.log(`Client left: ${client.sessionId}`);
   }
 
   onDispose(): void {
+    this.saveDirtyPlayers();
     this.playerRepository.close();
 
     console.log(`Room disposed: ${this.roomId}`);
@@ -196,15 +203,33 @@ export class GameRoom extends Room {
     });
   }
 
-  private savePlayer(player: PlayerState): void {
-    this.playerRepository.save({
-      playerId: player.playerId,
-      displayName: player.displayName,
-      mapKey: player.mapKey,
-      x: player.x,
-      y: player.y,
-      facing: player.facing,
-    });
+  private savePlayer(player: PlayerState): boolean {
+    try {
+      this.playerRepository.save({
+        playerId: player.playerId,
+        displayName: player.displayName,
+        mapKey: player.mapKey,
+        x: player.x,
+        y: player.y,
+        facing: player.facing,
+      });
+
+      return true;
+    } catch (error) {
+      console.error(`Failed to save player ${player.playerId}:`, error);
+
+      return false;
+    }
+  }
+
+  private saveDirtyPlayers(): void {
+    for (const sessionId of this.dirtyPlayerSessionIds) {
+      const player = this.state.players.get(sessionId);
+
+      if (!player || this.savePlayer(player)) {
+        this.dirtyPlayerSessionIds.delete(sessionId);
+      }
+    }
   }
 
   private fixedTick(): void {
@@ -221,7 +246,9 @@ export class GameRoom extends Room {
         continue;
       }
 
-      this.applyMovementInput(player, input);
+      if (this.applyMovementInput(player, input)) {
+        this.dirtyPlayerSessionIds.add(sessionId);
+      }
     }
   }
 
@@ -283,6 +310,12 @@ export class GameRoom extends Room {
     player.x = transition.targetX;
     player.y = transition.targetY;
 
+    this.dirtyPlayerSessionIds.add(client.sessionId);
+
+    if (this.savePlayer(player)) {
+      this.dirtyPlayerSessionIds.delete(client.sessionId);
+    }
+
     this.movementInputs.set(client.sessionId, []);
   }
 
@@ -299,7 +332,11 @@ export class GameRoom extends Room {
     );
   }
 
-  private applyMovementInput(player: PlayerState, input: MovementInput): void {
+  private applyMovementInput(player: PlayerState, input: MovementInput): boolean {
+    const previousX = player.x;
+    const previousY = player.y;
+    const previousFacing = player.facing;
+
     player.isMoving = input.x !== 0 || input.y !== 0;
 
     if (player.isMoving) {
@@ -318,6 +355,8 @@ export class GameRoom extends Room {
     this.movePlayer(player, 0, deltaY);
 
     player.lastProcessedInput = input.sequence;
+
+    return player.x !== previousX || player.y !== previousY || player.facing !== previousFacing;
   }
 
   private movePlayer(player: PlayerState, deltaX: number, deltaY: number): void {
@@ -369,7 +408,9 @@ export class GameRoom extends Room {
     }
 
     while (queue.length > 0 && queue[0].sequence <= sequence) {
-      this.applyMovementInput(player, queue.shift()!);
+      if (this.applyMovementInput(player, queue.shift()!)) {
+        this.dirtyPlayerSessionIds.add(sessionId);
+      }
     }
   }
 
